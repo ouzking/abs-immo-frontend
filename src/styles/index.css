@@ -1,0 +1,169 @@
+@import 'tailwindcss';
+
+/* =============================================================================
+   ABS IMMO & SERVICES — design system
+   Couleurs relevées sur le logo officiel : marine #104571, rouge #BF1522.
+   Aucune teinte dorée : les accents chauds passent exclusivement par le rouge.
+   ============================================================================= */
+@theme {
+  --font-sans: 'Manrope Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Fraunces Variable', ui-serif, Georgia, 'Times New Roman', serif;
+
+  /* Marine (logo) */
+  --color-navy-50: #f1f5f9;
+  --color-navy-100: #e1eaf2;
+  --color-navy-200: #c3d4e4;
+  --color-navy-300: #94b2cd;
+  --color-navy-400: #5c87ae;
+  --color-navy-500: #2f6593;
+  --color-navy-600: #1b5482;
+  --color-navy-700: #104571;
+  --color-navy-800: #0d3758;
+  --color-navy-900: #0a2a43;
+  --color-navy-950: #061a2b;
+
+  /* Rouge (logo) */
+  --color-brand-red-50: #fdf0f1;
+  --color-brand-red-100: #fbdcdf;
+  --color-brand-red-500: #d4303c;
+  --color-brand-red-600: #bf1522;
+  --color-brand-red-700: #9e111c;
+  --color-brand-red-800: #7f0e17;
+
+  /* Neutres légèrement bleutés (surfaces secondaires) */
+  --color-mist-50: #f7f8fa;
+  --color-mist-100: #eff2f5;
+  --color-mist-200: #e1e6ec;
+  --color-mist-300: #cbd3dc;
+  --color-mist-400: #9aa6b4;
+  --color-mist-500: #5d6878;
+  --color-mist-600: #505c6b;
+  --color-mist-700: #3b4552;
+  --color-ink: #0b1d2e;
+
+  --radius-card: 1.25rem;
+  --shadow-soft: 0 1px 2px rgb(11 29 46 / 0.04), 0 8px 24px -12px rgb(11 29 46 / 0.12);
+  --shadow-lift: 0 2px 4px rgb(11 29 46 / 0.04), 0 24px 48px -20px rgb(11 29 46 / 0.28);
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --animate-fade-up: fade-up 0.7s var(--ease-out-soft) both;
+  --animate-fade-in: fade-in 0.4s ease-out both;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes shimmer {
+    from {
+      background-position: -400px 0;
+    }
+    to {
+      background-position: 400px 0;
+    }
+  }
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    scroll-padding-top: 6rem;
+  }
+
+  body {
+    @apply bg-white font-sans text-ink antialiased;
+    font-feature-settings: 'ss01', 'cv11';
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background-color: var(--color-navy-700);
+    color: white;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-brand-red-600);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Le champ piège anti-robot ne doit être ni visible ni atteignable au clavier. */
+  .hp-field {
+    position: absolute !important;
+    left: -10000px !important;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .font-display {
+    font-optical-sizing: auto;
+    letter-spacing: -0.015em;
+  }
+
+  .eyebrow {
+    @apply inline-flex items-center gap-2 text-xs font-bold tracking-[0.18em] text-brand-red-600 uppercase;
+  }
+  .eyebrow::before {
+    content: '';
+    @apply h-px w-8 bg-current;
+  }
+
+  .skeleton {
+    background: linear-gradient(90deg, var(--color-mist-100) 0, var(--color-mist-200) 40%, var(--color-mist-100) 80%);
+    background-size: 800px 100%;
+    @apply animate-shimmer;
+  }
+
+  .prose-abs {
+    @apply max-w-none text-[1.0625rem] leading-8 text-mist-700;
+  }
+  .prose-abs p + p {
+    @apply mt-5;
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}

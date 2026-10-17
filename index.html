@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>ABS IMMO & SERVICES — Agence immobilière au Sénégal</title>
+    <meta
+      name="description"
+      content="Achat, location et accompagnement de projets immobiliers au Sénégal. Découvrez les biens proposés par ABS IMMO & SERVICES et contactez notre équipe."
+    />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#104571" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Valeurs par défaut lisibles sans JavaScript ; mises à jour par page (src/components/seo/Seo.tsx). -->
+    <meta property="og:site_name" content="ABS IMMO & SERVICES" />
+    <meta property="og:locale" content="fr_SN" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="ABS IMMO & SERVICES — Agence immobilière au Sénégal" />
+    <meta
+      property="og:description"
+      content="Achetez, louez ou confiez votre projet immobilier à une équipe qui vous accompagne avec sérieux et professionnalisme."
+    />
+    <meta property="og:image" content="/og-default.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- Page d'accueil uniquement : précharge la photo du hero (élément LCP) sans pénaliser les autres pages. -->
+    <script>
+      if (location.pathname === '/') {
+        var l = document.createElement('link')
+        l.rel = 'preload'
+        l.as = 'image'
+        l.type = 'image/avif'
+        l.setAttribute('imagesrcset', '/assets/photos/dakar-corniche-768.avif 768w, /assets/photos/dakar-corniche-1280.avif 1280w, /assets/photos/dakar-corniche-1920.avif 1920w, /assets/photos/dakar-corniche-2560.avif 2560w')
+        l.setAttribute('imagesizes', '100vw')
+        l.setAttribute('fetchpriority', 'high')
+        document.head.appendChild(l)
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>
+      <div style="font-family: system-ui, sans-serif; max-width: 40rem; margin: 4rem auto; padding: 0 1rem; color: #0b1d2e">
+        <h1>ABS IMMO & SERVICES</h1>
+        <p>Agence immobilière au Sénégal. Activez JavaScript pour consulter nos annonces et nous contacter.</p>
+      </div>
+    </noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
