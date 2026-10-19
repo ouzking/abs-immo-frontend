@@ -1,13 +1,17 @@
 import { useRef } from 'react'
-import { NavLink, useLocation } from 'react-router'
+import { useLocation } from 'react-router'
 import { Menu, Phone, X } from 'lucide-react'
 import { MAIN_NAV } from '@/config/site'
 import { useAgency } from '@/features/agency/agencyService'
 import { useScrolled } from '@/hooks/useScrolled'
+import { splitLocale } from '@/i18n/config'
+import { useI18n } from '@/i18n/context'
+import { NavLink } from '@/i18n/Link'
 import { cn } from '@/lib/cn'
 import { formatPhone, telHref } from '@/lib/format'
 import { ButtonLink } from '@/components/ui/Button'
 import { Container } from '@/components/ui/primitives'
+import { LanguageSwitcher } from './LanguageSwitcher'
 import { Logo, LogoImage } from './Logo'
 
 function navLinkClass({ isActive }: { isActive: boolean }) {
@@ -21,8 +25,9 @@ function navLinkClass({ isActive }: { isActive: boolean }) {
 export function Header() {
   const scrolled = useScrolled()
   const { data: agency } = useAgency()
+  const { t } = useI18n()
   const dialogRef = useRef<HTMLDialogElement>(null)
-  const { pathname } = useLocation()
+  const { path: currentPath } = splitLocale(useLocation().pathname)
 
   const openMenu = () => dialogRef.current?.showModal()
   const closeMenu = () => dialogRef.current?.close()
@@ -34,15 +39,18 @@ export function Header() {
         scrolled ? 'border-mist-200 shadow-[0_8px_30px_-18px_rgb(11_29_46/0.35)]' : 'border-transparent',
       )}
     >
+      {t.common.languageNotice && (
+        <p className="bg-navy-50 px-4 py-1.5 text-center text-xs font-semibold text-navy-800">{t.common.languageNotice}</p>
+      )}
       <Container className={cn('flex items-center justify-between gap-6 transition-[height] duration-300', scrolled ? 'h-16' : 'h-20')}>
         <Logo />
 
-        <nav aria-label="Navigation principale" className="hidden lg:block">
-          <ul className="flex items-center gap-7">
+        <nav aria-label={t.nav.main} className="hidden lg:block">
+          <ul className="flex items-center gap-6 xl:gap-7">
             {MAIN_NAV.map((item) => (
               <li key={item.to}>
                 <NavLink to={item.to} end={item.end} className={navLinkClass}>
-                  {item.label}
+                  {t.nav[item.key]}
                 </NavLink>
               </li>
             ))}
@@ -53,7 +61,7 @@ export function Header() {
           {agency?.phone && (
             <a
               href={telHref(agency.phone)}
-              className="hidden items-center gap-2 text-sm font-semibold text-navy-800 hover:text-brand-red-600 xl:inline-flex"
+              className="hidden items-center gap-2 text-sm font-semibold text-navy-800 hover:text-brand-red-600 2xl:inline-flex"
             >
               <span className="flex size-9 items-center justify-center rounded-full bg-navy-50">
                 <Phone aria-hidden="true" className="size-4" />
@@ -61,8 +69,9 @@ export function Header() {
               {formatPhone(agency.phone)}
             </a>
           )}
+          <LanguageSwitcher className="max-lg:hidden" />
           <ButtonLink to="/contact" size="md" className="max-sm:hidden">
-            Nous contacter
+            {t.nav.contactCta}
           </ButtonLink>
           <button
             type="button"
@@ -72,7 +81,7 @@ export function Header() {
             className="inline-flex size-11 items-center justify-center rounded-full text-navy-900 hover:bg-navy-50 lg:hidden"
           >
             <Menu aria-hidden="true" className="size-6" />
-            <span className="sr-only">Ouvrir le menu</span>
+            <span className="sr-only">{t.nav.openMenu}</span>
           </button>
         </div>
       </Container>
@@ -81,7 +90,7 @@ export function Header() {
       <dialog
         ref={dialogRef}
         id="menu-mobile"
-        aria-label="Menu"
+        aria-label={t.nav.menu}
         className="fixed inset-y-0 right-0 left-auto m-0 h-dvh max-h-none w-full max-w-sm bg-white p-0 backdrop:bg-navy-950/50 backdrop:backdrop-blur-sm open:animate-fade-in"
         onClick={(e) => {
           if (e.target === e.currentTarget) closeMenu()
@@ -96,10 +105,10 @@ export function Header() {
               className="inline-flex size-11 items-center justify-center rounded-full text-navy-900 hover:bg-navy-50"
             >
               <X aria-hidden="true" className="size-6" />
-              <span className="sr-only">Fermer le menu</span>
+              <span className="sr-only">{t.nav.closeMenu}</span>
             </button>
           </div>
-          <nav aria-label="Navigation mobile" className="flex-1 overflow-y-auto px-5 py-6">
+          <nav aria-label={t.nav.mobile} className="flex-1 overflow-y-auto px-5 py-6">
             <ul className="space-y-1">
               {MAIN_NAV.map((item) => (
                 <li key={item.to}>
@@ -114,8 +123,8 @@ export function Header() {
                       )
                     }
                   >
-                    {item.label}
-                    {(item.end ? pathname === item.to : pathname.startsWith(item.to)) && (
+                    {t.nav[item.key]}
+                    {(item.end ? currentPath === item.to : currentPath.startsWith(item.to)) && (
                       <span aria-hidden="true" className="size-2 rounded-full bg-brand-red-600" />
                     )}
                   </NavLink>
@@ -124,8 +133,9 @@ export function Header() {
             </ul>
           </nav>
           <div className="space-y-3 border-t border-mist-200 p-5">
+            <LanguageSwitcher onSelect={closeMenu} className="flex justify-center" />
             <ButtonLink to="/contact" onClick={closeMenu} className="w-full" size="lg">
-              Nous contacter
+              {t.nav.contactCta}
             </ButtonLink>
             {agency?.phone && (
               <a

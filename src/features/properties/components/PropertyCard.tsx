@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react'
-import { Link } from 'react-router'
 import { BedDouble, Bath, MapPin, Ruler, Sparkles } from 'lucide-react'
 import { Badge, Skeleton } from '@/components/ui/primitives'
+import { useI18n } from '@/i18n/context'
+import { Link } from '@/i18n/Link'
 import { cn } from '@/lib/cn'
-import { formatPrice, formatSurface, plural } from '@/lib/format'
 import type { PropertyCardView } from '../api/propertiesService'
 import { isNoLongerAvailable, propertyLocation } from '../labels'
 import { PropertyImage } from './PropertyImage'
@@ -23,13 +23,14 @@ export function PropertyCard({
   priority?: boolean
   headingLevel?: 'h2' | 'h3'
 }) {
+  const { t, fmt } = useI18n()
   const Heading = headingLevel
   const location = propertyLocation(p)
-  const surface = formatSurface(p.surface_area, p.surface_unit)
+  const surface = fmt.surface(p.surface_area, p.surface_unit)
   const unavailable = isNoLongerAvailable(p.commercial_status)
   const facts = [
-    p.bedrooms ? { icon: BedDouble, label: plural(p.bedrooms, 'chambre') } : null,
-    p.bathrooms ? { icon: Bath, label: plural(p.bathrooms, 'salle de bain', 'salles de bain') } : null,
+    p.bedrooms ? { icon: BedDouble, label: t.units.bedrooms(p.bedrooms) } : null,
+    p.bathrooms ? { icon: Bath, label: t.units.bathrooms(p.bathrooms) } : null,
     surface ? { icon: Ruler, label: surface } : null,
   ].filter((f): f is NonNullable<typeof f> => f !== null)
 
@@ -55,7 +56,7 @@ export function PropertyCard({
           <CommercialStatusBadge status={p.commercial_status} />
           {p.is_featured && !unavailable && (
             <Badge tone="white" className="ml-auto">
-              <Sparkles aria-hidden="true" className="size-3.5 text-brand-red-600" />À la une
+              <Sparkles aria-hidden="true" className="size-3.5 text-brand-red-600" />{t.labels.featured}
             </Badge>
           )}
         </div>
@@ -63,7 +64,7 @@ export function PropertyCard({
 
       <div className="flex flex-1 flex-col p-5 sm:p-6">
         <div className="flex items-center justify-between gap-3 text-xs font-semibold tracking-wide text-mist-500 uppercase">
-          <span>{p.property_type_label}</span>
+          <span>{fmt.propertyType(p.property_type, p.property_type_label)}</span>
           {p.reference && <span className="font-mono text-[0.6875rem] tracking-normal normal-case">{p.reference}</span>}
         </div>
         <Heading className="font-display mt-2 line-clamp-2 text-xl leading-snug font-medium text-navy-900">
@@ -92,7 +93,7 @@ export function PropertyCard({
         <div className="mt-auto pt-5">
           <div className="flex items-end justify-between gap-3 border-t border-mist-200 pt-4">
             <p className={cn('text-lg font-extrabold tracking-tight text-navy-800', unavailable && 'text-mist-500')}>
-              {formatPrice(p.price_amount, p.transaction_type === 'rent' ? p.rent_period : null)}
+              {fmt.price(p.price_amount, p.transaction_type === 'rent' ? p.rent_period : null)}
             </p>
           </div>
         </div>

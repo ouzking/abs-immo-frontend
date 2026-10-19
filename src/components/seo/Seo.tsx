@@ -1,16 +1,18 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router'
-import { absoluteUrl, formatTitle, SITE } from '@/config/site'
+import { absoluteUrl, SITE } from '@/config/site'
+import { LOCALE_META, LOCALES, localizePath, splitLocale } from '@/i18n/config'
+import { useI18n } from '@/i18n/context'
 
 /**
  * Métadonnées de page. index.html contient des valeurs par défaut (lisibles sans
- * JavaScript) ; ce composant les METS À JOUR au lieu d'en ajouter de nouvelles,
+ * JavaScript) ; ce composant les MET À JOUR au lieu d'en ajouter de nouvelles,
  * pour éviter les balises en double.
  */
 export interface SeoProps {
   title?: string
   description?: string
-  /** Chemin canonique (par défaut : chemin courant sans paramètres). */
+  /** Chemin canonique SANS préfixe de langue (par défaut : chemin courant). */
   canonicalPath?: string
   image?: string | null
   imageAlt?: string
@@ -34,7 +36,7 @@ function upsertMeta(attr: 'name' | 'property', key: string, content: string | nu
 }
 
 function upsertLink(rel: string, href: string) {
-  let el = document.head.querySelector<HTMLLinkElement>(`link[rel="${rel}"]`)
+  let el = document.head.querySelector<HTMLLinkElement>(`link[rel="${rel}"]:not([hreflang])`)
   if (!el) {
     el = document.createElement('link')
     el.setAttribute('rel', rel)
@@ -45,7 +47,7 @@ function upsertLink(rel: string, href: string) {
 
 export function Seo({
   title,
-  description = SITE.defaultDescription,
+  description,
   canonicalPath,
   image,
   imageAlt,
@@ -54,29 +56,50 @@ export function Seo({
   jsonLd,
 }: SeoProps) {
   const { pathname } = useLocation()
-  const fullTitle = formatTitle(title)
-  const canonical = absoluteUrl(canonicalPath ?? pathname)
+  const { locale, t } = useI18n()
+  const basePath = canonicalPath ?? splitLocale(pathname).path
+  const fullTitle = title ? `${title} | ${SITE.name}` : t.meta.defaultTitle
+  const desc = description ?? t.meta.defaultDescription
+  const canonical = absoluteUrl(localizePath(basePath, locale))
   const imageUrl = absoluteUrl(image ?? SITE.defaultImage)
+  const robotsNoindex = noindex || !LOCALE_META[locale].indexable
   const jsonLdText = jsonLd ? JSON.stringify(jsonLd) : null
 
   useEffect(() => {
     document.title = fullTitle
-    upsertMeta('name', 'description', description)
-    upsertMeta('name', 'robots', noindex ? 'noindex, follow' : 'index, follow')
+    upsertMeta('name', 'description', desc)
+    upsertMeta('name', 'robots', robotsNoindex ? 'noindex, follow' : 'index, follow')
     upsertLink('canonical', canonical)
     upsertMeta('property', 'og:site_name', SITE.name)
-    upsertMeta('property', 'og:locale', SITE.locale)
+    upsertMeta('property', 'og:locale', LOCALE_META[locale].ogLocale)
     upsertMeta('property', 'og:type', type)
     upsertMeta('property', 'og:title', fullTitle)
-    upsertMeta('property', 'og:description', description)
+    upsertMeta('property', 'og:description', desc)
     upsertMeta('property', 'og:url', canonical)
     upsertMeta('property', 'og:image', imageUrl)
     upsertMeta('property', 'og:image:alt', imageAlt ?? fullTitle)
     upsertMeta('name', 'twitter:card', 'summary_large_image')
     upsertMeta('name', 'twitter:title', fullTitle)
-    upsertMeta('name', 'twitter:description', description)
+    upsertMeta('name', 'twitter:description', desc)
     upsertMeta('name', 'twitter:image', imageUrl)
-  }, [fullTitle, description, canonical, imageUrl, imageAlt, type, noindex])
+  }, [fullTitle, desc, canonical, imageUrl, imageAlt, type, robotsNoindex, locale])
+
+  // Versions linguistiques (hreflang) : uniquement les langues indexables, x-default = français.
+  useEffect(() => {
+    if (noindex) return
+    const links = [
+      ...LOCALES.filter((l) => LOCALE_META[l].indexable).map((l) => [LOCALE_META[l].htmlLang, l] as const),
+      ['x-default', 'fr'] as const,
+    ].map(([hreflang, l]) => {
+      const el = document.createElement('link')
+      el.rel = 'alternate'
+      el.hreflang = hreflang
+      el.href = absoluteUrl(localizePath(basePath, l))
+      document.head.appendChild(el)
+      return el
+    })
+    return () => links.forEach((el) => el.remove())
+  }, [basePath, noindex])
 
   useEffect(() => {
     if (!jsonLdText) return

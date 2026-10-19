@@ -1,5 +1,6 @@
 import type { ComponentProps, ReactNode } from 'react'
-import { Link, type LinkProps } from 'react-router'
+import type { LinkProps } from 'react-router'
+import { Link } from '@/i18n/Link'
 import { cn } from '@/lib/cn'
 
 type Variant = 'primary' | 'navy' | 'outline' | 'ghost' | 'light' | 'outline-light'

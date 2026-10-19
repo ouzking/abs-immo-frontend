@@ -24,14 +24,16 @@ import {
 } from '@/features/properties/components/PropertyDetails'
 import { CommercialStatusBadge, TransactionBadge } from '@/features/properties/components/StatusBadges'
 import { useProperty, useSimilarProperties } from '@/features/properties/hooks'
-import { isNoLongerAvailable, TRANSACTION_LABELS } from '@/features/properties/labels'
+import { isNoLongerAvailable } from '@/features/properties/labels'
 import { catalogPath } from '@/features/search/searchParams'
 import { breadcrumbJsonLd, propertyJsonLd } from '@/features/seo/structuredData'
-import { formatDate, formatPrice, telHref, whatsappHref } from '@/lib/format'
+import { useI18n } from '@/i18n/context'
+import { telHref, whatsappHref } from '@/lib/format'
 import type { TransactionType } from '@/types'
 import { NotFoundContent } from './NotFoundPage'
 
 function ShareButton({ title }: { title: string }) {
+  const { t } = useI18n()
   const [copied, setCopied] = useState(false)
   const share = async () => {
     const url = window.location.href.split('?')[0]!
@@ -54,23 +56,24 @@ function ShareButton({ title }: { title: string }) {
       className="inline-flex items-center gap-2 rounded-full border border-mist-300 px-4 py-2 text-sm font-semibold text-navy-800 hover:border-navy-700"
     >
       {copied ? <Check aria-hidden="true" className="size-4 text-emerald-700" /> : <Share2 aria-hidden="true" className="size-4" />}
-      <span aria-live="polite">{copied ? 'Lien copié' : 'Partager'}</span>
+      <span aria-live="polite">{copied ? t.common.linkCopied : t.common.share}</span>
     </button>
   )
 }
 
 function StatusNotice({ property: p }: { property: PropertyDetailView }) {
+  const { t } = useI18n()
   if (p.commercial_status === 'sold' || p.commercial_status === 'rented') {
     return (
-      <Alert tone="info" title={p.commercial_status === 'sold' ? 'Ce bien a été vendu.' : 'Ce bien a été loué.'} className="mt-6">
-        Il n’est plus disponible. Découvrez ci-dessous des biens comparables encore proposés, ou confiez-nous votre recherche.
+      <Alert tone="info" title={p.commercial_status === 'sold' ? t.property.soldTitle : t.property.rentedTitle} className="mt-6">
+        {t.property.unavailableText}
       </Alert>
     )
   }
   if (p.commercial_status === 'reserved') {
     return (
-      <Alert tone="info" title="Ce bien est actuellement sous option." className="mt-6">
-        Une offre est en cours. Vous pouvez néanmoins nous contacter pour être informé si le bien redevient disponible.
+      <Alert tone="info" title={t.property.reservedTitle} className="mt-6">
+        {t.property.reservedText}
       </Alert>
     )
   }
@@ -78,10 +81,11 @@ function StatusNotice({ property: p }: { property: PropertyDetailView }) {
 }
 
 function PropertySkeleton() {
+  const { t } = useI18n()
   return (
     <Container className="py-8" aria-busy="true">
       <span className="sr-only" role="status">
-        Chargement de l’annonce…
+        {t.property.loading}
       </span>
       <Skeleton className="h-4 w-64" />
       <Skeleton className="mt-8 h-10 w-3/4" />
@@ -96,12 +100,13 @@ function PropertySkeleton() {
 
 function SimilarSection({ propertyId }: { propertyId: string }) {
   const { data, status } = useSimilarProperties(propertyId)
+  const { t } = useI18n()
   // Section facultative : masquée en cas d'erreur ou d'absence de résultats.
   if (status === 'error' || (status === 'success' && (!data || data.length === 0))) return null
   return (
     <section aria-labelledby="similar-title" className="border-t border-mist-200 bg-mist-50 py-16 lg:py-24">
       <Container>
-        <SectionHeading id="similar-title" eyebrow="À découvrir aussi" title="Biens similaires disponibles" />
+        <SectionHeading id="similar-title" eyebrow={t.property.similarEyebrow} title={t.property.similarTitle} />
         <PropertyGrid className="mt-10">
           {status === 'loading'
             ? Array.from({ length: 3 }, (_, i) => <PropertyCardSkeleton key={i} />)
@@ -116,56 +121,58 @@ export default function PropertyPage() {
   const { slug } = useParams()
   const { data: p, status, error, refetch } = useProperty(slug)
   const { data: agency } = useAgency()
+  const { t, fmt, path, locale } = useI18n()
 
   if (status === 'loading' || status === 'idle') return <PropertySkeleton />
   if (status === 'error' && error?.kind === 'not_found') {
     return (
       <NotFoundContent
-        title="Cette annonce n’est plus en ligne"
-        description="Le bien a peut-être été retiré de la vente ou de la location. Découvrez les autres biens proposés par l’agence."
+        title={t.property.goneTitle}
+        description={t.property.goneText}
       />
     )
   }
   if (status === 'error' || !p) {
     return (
       <Container className="py-20">
-        <ErrorState error={error} onRetry={refetch} title="L’annonce n’a pas pu être chargée" />
+        <ErrorState error={error} onRetry={refetch} title={t.property.error} />
       </Container>
     )
   }
 
   const transaction = (p.transaction_type ?? 'sale') as TransactionType
   const listPath = catalogPath(transaction)
-  const listName = transaction === 'rent' ? 'Louer' : 'Acheter'
-  const price = formatPrice(p.price_amount, transaction === 'rent' ? p.rent_period : null)
+  const listName = transaction === 'rent' ? t.nav.rent : t.nav.buy
+  const price = fmt.price(p.price_amount, transaction === 'rent' ? p.rent_period : null)
   const location = [p.neighborhood_name, p.city_name].filter(Boolean).join(', ')
   const unavailable = isNoLongerAvailable(p.commercial_status)
-  const contact = propertyContact(p, agency)
-  const description =
-    p.seo_description ??
-    p.short_description ??
-    `${p.property_type_label ?? 'Bien'} ${TRANSACTION_LABELS[transaction].toLowerCase()}${location ? ` à ${location}` : ''} — ${price}.`
+  const contact = propertyContact(p, agency, t)
+  const typeLabel = fmt.propertyType(p.property_type, p.property_type_label)
+  const title = p.title ?? t.property.fallbackTitle
+  const autoDescription = t.property.autoDescription(typeLabel, t.labels.transaction[transaction], location, price)
+  // Les textes des annonces sont rédigés en français : description générée dans les autres langues.
+  const description = locale === 'fr' ? (p.seo_description ?? p.short_description ?? autoDescription) : autoDescription
 
   return (
     <>
       <Seo
-        title={p.seo_title ?? `${p.title}${location ? ` — ${location}` : ''}`}
+        title={(locale === 'fr' && p.seo_title) || `${title}${location ? ` — ${location}` : ''}`}
         description={description}
         canonicalPath={`/biens/${p.slug}`}
         type="article"
         jsonLd={[
-          propertyJsonLd(p),
+          propertyJsonLd(p, path),
           breadcrumbJsonLd([
-            { name: 'Accueil', path: '/' },
-            { name: listName, path: listPath },
-            { name: p.title ?? 'Annonce', path: `/biens/${p.slug}` },
+            { name: t.common.home, path: path('/') },
+            { name: listName, path: path(listPath) },
+            { name: title, path: path(`/biens/${p.slug}`) },
           ]),
         ]}
       />
 
       <div className="border-b border-mist-200 bg-mist-50">
         <Container className="py-4">
-          <Breadcrumbs items={[{ name: 'Accueil', path: '/' }, { name: listName, path: listPath }, { name: p.title ?? 'Annonce' }]} />
+          <Breadcrumbs items={[{ name: t.common.home, path: '/' }, { name: listName, path: listPath }, { name: title }]} />
         </Container>
       </div>
 
@@ -175,7 +182,7 @@ export default function PropertyPage() {
             <div className="flex flex-wrap items-center gap-2">
               <TransactionBadge type={p.transaction_type} />
               <CommercialStatusBadge status={p.commercial_status} showAvailable />
-              {p.property_type_label && <span className="text-sm font-semibold text-mist-600">{p.property_type_label}</span>}
+              {typeLabel && <span className="text-sm font-semibold text-mist-600">{typeLabel}</span>}
             </div>
             <h1 className="font-display mt-4 text-3xl leading-[1.12] font-medium text-navy-900 sm:text-4xl lg:text-5xl">{p.title}</h1>
             {location && (
@@ -190,12 +197,12 @@ export default function PropertyPage() {
                   Référence <strong className="font-mono font-semibold text-navy-800">{p.reference}</strong>
                 </span>
               )}
-              {formatDate(p.published_at) && <span>Publié le {formatDate(p.published_at)}</span>}
+              {fmt.date(p.published_at) && <span>{t.property.published(fmt.date(p.published_at)!)}</span>}
             </p>
           </div>
           <div className="flex flex-col items-start gap-3 lg:items-end">
             <p className="text-3xl font-extrabold tracking-tight text-navy-800 sm:text-4xl">{price}</p>
-            <ShareButton title={p.title ?? 'Annonce ABS IMMO & SERVICES'} />
+            <ShareButton title={title} />
           </div>
         </header>
 
@@ -203,11 +210,11 @@ export default function PropertyPage() {
 
         <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_24rem] xl:gap-14">
           <div className="min-w-0 space-y-10">
-            <Gallery images={p.images} title={p.title ?? 'Bien immobilier'} />
+            <Gallery images={p.images} title={title} />
             <KeyFacts property={p} />
 
             {(p.short_description || p.description) && (
-              <DetailSection title="Description" id="desc-title">
+              <DetailSection title={t.property.description} id="desc-title">
                 {p.short_description && !p.description?.startsWith(p.short_description) && (
                   <p className="mb-5 text-lg leading-8 font-medium text-navy-900">{p.short_description}</p>
                 )}
@@ -216,38 +223,37 @@ export default function PropertyPage() {
             )}
 
             {p.features.length > 0 && (
-              <DetailSection title="Caractéristiques" id="features-title">
+              <DetailSection title={t.property.features} id="features-title">
                 <FeatureList features={p.features} />
               </DetailSection>
             )}
 
             {p.amenities.length > 0 && (
-              <DetailSection title="Équipements" id="amenities-title">
+              <DetailSection title={t.property.amenities} id="amenities-title">
                 <AmenityList amenities={p.amenities} />
               </DetailSection>
             )}
 
-            <DetailSection title="Localisation" id="location-title">
+            <DetailSection title={t.property.location} id="location-title">
               <LocationBlock property={p} />
             </DetailSection>
 
             <p className="flex gap-2 text-xs leading-5 text-mist-500">
               <Info aria-hidden="true" className="size-4 shrink-0" />
-              Informations communiquées à titre indicatif par l’agence et susceptibles d’évoluer. Elles ne constituent pas
-              un document contractuel.
+              {t.property.disclaimer}
             </p>
           </div>
 
-          <aside aria-label="Contacter l’agence pour ce bien" id="contact-bien" className="scroll-mt-24">
+          <aside aria-label={t.property.contactAside} id="contact-bien" className="scroll-mt-24">
             <div className="space-y-4">
               {/* Encadré financier seulement s'il apporte plus que le prix déjà affiché en en-tête. */}
               {(p.price_on_request || p.deposit_amount || p.agency_fee_amount || p.price_negotiable) && (
                 <div className="rounded-card bg-navy-900 p-6 text-white">
                   <p className="text-xs font-semibold tracking-wide text-white/60 uppercase">
-                    {transaction === 'rent' ? 'Loyer' : 'Prix de vente'}
+                    {transaction === 'rent' ? t.property.rentLabel : t.property.priceLabel}
                   </p>
                   <p className="mt-1 text-2xl font-extrabold">{price}</p>
-                  {p.price_on_request && <p className="mt-1 text-sm text-white/70">Le prix vous est communiqué sur simple demande.</p>}
+                  {p.price_on_request && <p className="mt-1 text-sm text-white/70">{t.property.priceOnRequestText}</p>}
                   <div className="[&_dd]:text-white [&_dl]:border-white/15 [&_dt]:text-white/70">
                     <FinancialTerms property={p} />
                   </div>
@@ -256,7 +262,7 @@ export default function PropertyPage() {
               <PropertyContactCard property={p} agency={agency} />
               {unavailable && (
                 <ButtonLink to={listPath} variant="outline" className="w-full">
-                  Voir les biens disponibles
+                  {t.property.seeAvailable}
                 </ButtonLink>
               )}
             </div>
@@ -279,22 +285,22 @@ export default function PropertyPage() {
               className="flex size-12 items-center justify-center rounded-full border border-navy-200 text-navy-800"
             >
               <Phone aria-hidden="true" className="size-5" />
-              <span className="sr-only">Appeler</span>
+              <span className="sr-only">{t.common.call}</span>
             </a>
           )}
           {contact.whatsapp && (
             <a
-              href={whatsappHref(contact.whatsapp, whatsappMessage(p))}
+              href={whatsappHref(contact.whatsapp, whatsappMessage(p, t))}
               target="_blank"
               rel="noopener noreferrer"
               className="flex size-12 items-center justify-center rounded-full bg-[#1f8f4e] text-white"
             >
               <WhatsAppIcon className="size-5" />
-              <span className="sr-only">WhatsApp (nouvel onglet)</span>
+              <span className="sr-only">WhatsApp {t.common.newTab}</span>
             </a>
           )}
           <a href="#contact-bien" className="inline-flex h-12 items-center rounded-full bg-brand-red-600 px-5 font-semibold text-white">
-            Contacter
+            {t.property.contactButton}
           </a>
         </div>
       </div>

@@ -2,27 +2,25 @@ import { Compass } from 'lucide-react'
 import { Seo } from '@/components/seo/Seo'
 import { ButtonLink } from '@/components/ui/Button'
 import { Container } from '@/components/ui/primitives'
+import { useI18n } from '@/i18n/context'
 
-export function NotFoundContent({
-  title = 'Cette page est introuvable',
-  description = 'L’adresse saisie n’existe pas ou plus. Les liens ci-dessous vous ramènent vers nos biens.',
-}: {
-  title?: string
-  description?: string
-}) {
+export function NotFoundContent({ title, description }: { title?: string; description?: string }) {
+  const { t } = useI18n()
+  const heading = title ?? t.notFound.title
+  const text = description ?? t.notFound.description
   return (
     <Container className="flex min-h-[60vh] flex-col items-center justify-center py-24 text-center">
-      <Seo title={title} description={description} noindex />
+      <Seo title={heading} description={text} noindex />
       <span className="flex size-16 items-center justify-center rounded-full bg-navy-50 text-navy-700">
         <Compass aria-hidden="true" className="size-8" />
       </span>
-      <p className="font-display mt-6 text-sm font-semibold tracking-[0.3em] text-brand-red-600">ERREUR 404</p>
-      <h1 className="font-display mt-3 text-4xl font-medium text-navy-900 sm:text-5xl">{title}</h1>
-      <p className="mt-4 max-w-lg text-lg text-mist-600">{description}</p>
+      <p className="font-display mt-6 text-sm font-semibold tracking-[0.3em] text-brand-red-600">{t.notFound.code}</p>
+      <h1 className="font-display mt-3 text-4xl font-medium text-navy-900 sm:text-5xl">{heading}</h1>
+      <p className="mt-4 max-w-lg text-lg text-mist-600">{text}</p>
       <div className="mt-10 flex flex-wrap justify-center gap-3">
-        <ButtonLink to="/biens">Voir nos biens</ButtonLink>
+        <ButtonLink to="/biens">{t.notFound.properties}</ButtonLink>
         <ButtonLink to="/" variant="outline">
-          Retour à l’accueil
+          {t.notFound.home}
         </ButtonLink>
       </div>
     </Container>

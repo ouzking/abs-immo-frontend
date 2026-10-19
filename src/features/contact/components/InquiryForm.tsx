@@ -1,18 +1,19 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm, type Path } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Send } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { CheckboxField, SelectField, TextAreaField, TextField } from '@/components/ui/fields'
 import { Alert, Spinner } from '@/components/ui/primitives'
+import { useI18n } from '@/i18n/context'
 import { AppError, toAppError } from '@/lib/errors'
 import { isCaptchaEnabled, useFormStartedAt } from '../antiBot'
 import { currentUtm, submitInquiry } from '../api/formsService'
 import {
   backendFieldName,
   buildInquiryMessage,
+  createInquirySchema,
   INQUIRY_SUBJECTS,
-  inquirySchema,
   LIMITS,
   normalizePhone,
   SUBJECT_TO_TYPE,
@@ -32,6 +33,9 @@ export interface InquiryFormProps {
 }
 
 export function InquiryForm({ property, defaultSubject = 'general', defaultMessage = '', compact = false }: InquiryFormProps) {
+  const { t, locale } = useI18n()
+  const f = t.forms
+  const schema = useMemo(() => createInquirySchema(f.validation), [f.validation])
   const [startedAt, restartTimer] = useFormStartedAt()
   const [honeypot, setHoneypot] = useState('')
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
@@ -46,7 +50,7 @@ export function InquiryForm({ property, defaultSubject = 'general', defaultMessa
     setError,
     formState: { errors, isSubmitting },
   } = useForm<InquiryFormInput, unknown, InquiryFormValues>({
-    resolver: zodResolver(inquirySchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       full_name: '',
       email: '',
@@ -62,7 +66,7 @@ export function InquiryForm({ property, defaultSubject = 'general', defaultMessa
   const onSubmit = async (values: InquiryFormValues) => {
     setSubmitError(null)
     if (isCaptchaEnabled() && !captchaToken) {
-      setSubmitError(new AppError('captcha', undefined, { userMessage: 'Merci de valider la vérification anti-robot.' }))
+      setSubmitError(new AppError('captcha', undefined, { userMessage: f.captchaRequired }))
       return
     }
     try {
@@ -70,7 +74,7 @@ export function InquiryForm({ property, defaultSubject = 'general', defaultMessa
         full_name: values.full_name,
         email: values.email || null,
         phone: values.phone ? normalizePhone(values.phone) : null,
-        message: buildInquiryMessage(values.subject, values.message, !!property),
+        message: buildInquiryMessage(values.subject, values.message, !!property, locale),
         property_id: property?.id ?? null,
         inquiry_type: property ? 'property_info' : SUBJECT_TO_TYPE[values.subject],
         preferred_contact: values.preferred_contact || null,
@@ -86,7 +90,8 @@ export function InquiryForm({ property, defaultSubject = 'general', defaultMessa
       const error = toAppError(e)
       if (error.fields) {
         for (const [field, message] of Object.entries(error.fields)) {
-          setError(backendFieldName(field) as Path<InquiryFormInput>, { type: 'server', message })
+          // Les messages de champ du backend sont en français : remplacés par un texte générique dans les autres langues.
+          setError(backendFieldName(field) as Path<InquiryFormInput>, { type: 'server', message: f.validation.server || message })
         }
       }
       setSubmitError(error)
@@ -98,7 +103,8 @@ export function InquiryForm({ property, defaultSubject = 'general', defaultMessa
   if (sent) {
     return (
       <SubmitSuccess
-        title="Merci, votre demande est bien enregistrée."
+        title={f.successTitle}
+        resetLabel={f.another}
         onReset={() => {
           reset()
           restartTimer()
@@ -106,8 +112,7 @@ export function InquiryForm({ property, defaultSubject = 'general', defaultMessa
           setCaptchaKey((k) => k + 1)
         }}
       >
-        Un conseiller ABS IMMO & SERVICES prendra contact avec vous
-        {property ? ` au sujet du bien ${property.reference ?? property.title}` : ''} par le moyen indiqué.
+        {f.successText(property ? (property.reference ?? property.title) : '')}
       </SubmitSuccess>
     )
   }
@@ -116,85 +121,70 @@ export function InquiryForm({ property, defaultSubject = 'general', defaultMessa
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
       <HoneypotField value={honeypot} onChange={setHoneypot} />
 
-      <TextField
-        label="Nom complet"
-        autoComplete="name"
-        required
-        error={errors.full_name?.message}
-        {...register('full_name')}
-      />
+      <TextField label={f.fullName} autoComplete="name" required error={errors.full_name?.message} {...register('full_name')} />
 
       <div className={compact ? 'space-y-5' : 'grid gap-5 sm:grid-cols-2'}>
         <TextField
-          label="Téléphone"
+          label={f.phone}
           type="tel"
           inputMode="tel"
           autoComplete="tel"
-          placeholder="77 123 45 67"
-          hint="Numéro sénégalais ou international (+33…)."
+          placeholder={f.phonePlaceholder}
+          hint={f.phoneHint}
           error={errors.phone?.message}
           {...register('phone')}
         />
         <TextField
-          label="E-mail"
+          label={f.email}
           type="email"
           autoComplete="email"
-          placeholder="vous@exemple.com"
+          placeholder={f.emailPlaceholder}
           error={errors.email?.message}
           {...register('email')}
         />
       </div>
 
       {!property && (
-        <SelectField label="Votre projet" error={errors.subject?.message} {...register('subject')}>
+        <SelectField label={f.project} error={errors.subject?.message} {...register('subject')}>
           {INQUIRY_SUBJECTS.map((s) => (
-            <option key={s.value} value={s.value}>
-              {s.label}
+            <option key={s} value={s}>
+              {f.subjects[s]}
             </option>
           ))}
         </SelectField>
       )}
 
       <TextAreaField
-        label={property ? 'Votre message (facultatif)' : 'Votre message'}
+        label={property ? f.messageOptional : f.message}
         required={!property}
         rows={compact ? 4 : 5}
         maxLength={LIMITS.inquiryMessageMax}
-        placeholder={
-          property
-            ? 'Disponibilité, conditions, documents…'
-            : 'Type de bien, quartier souhaité, budget, délai…'
-        }
+        placeholder={property ? f.messagePlaceholderProperty : f.messagePlaceholder}
         error={errors.message?.message}
         {...register('message')}
       />
 
-      <SelectField label="Comment souhaitez-vous être recontacté ?" error={errors.preferred_contact?.message} {...register('preferred_contact')}>
-        <option value="">Peu importe</option>
-        <option value="phone">Être rappelé par téléphone</option>
-        <option value="whatsapp">Par WhatsApp</option>
-        <option value="email">Par e-mail</option>
+      <SelectField label={f.preferredContact} error={errors.preferred_contact?.message} {...register('preferred_contact')}>
+        <option value="">{f.contactAny}</option>
+        <option value="phone">{f.contactPhone}</option>
+        <option value="whatsapp">{f.contactWhatsapp}</option>
+        <option value="email">{f.contactEmail}</option>
       </SelectField>
 
-      <CheckboxField
-        label="J’accepte de recevoir des propositions de biens correspondant à ma recherche."
-        {...register('consent_marketing')}
-      />
+      <CheckboxField label={f.consent} {...register('consent_marketing')} />
 
       <TurnstileWidget onToken={setCaptchaToken} resetKey={captchaKey} />
       <SubmitError error={submitError} />
-      {submitError?.kind === 'network' && (
-        <Alert tone="info">Vous pouvez aussi nous joindre directement par téléphone ou WhatsApp.</Alert>
-      )}
+      {submitError?.kind === 'network' && <Alert tone="info">{f.networkHint}</Alert>}
 
       <Button
         type="submit"
         size="lg"
         className="w-full"
         disabled={isSubmitting}
-        icon={isSubmitting ? <Spinner className="size-5" label="Envoi en cours…" /> : <Send aria-hidden="true" className="size-5" />}
+        icon={isSubmitting ? <Spinner className="size-5" label={f.sending} /> : <Send aria-hidden="true" className="size-5" />}
       >
-        {isSubmitting ? null : property ? 'Demander des informations' : 'Envoyer ma demande'}
+        {isSubmitting ? null : property ? f.submitPropertyInquiry : f.submitInquiry}
       </Button>
       <PrivacyNotice />
     </form>

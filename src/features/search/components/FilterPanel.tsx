@@ -1,8 +1,8 @@
 import { useEffect, useEffectEvent, useState, type ReactNode } from 'react'
 import { RotateCcw, Search } from 'lucide-react'
 import { CheckboxField, SelectField } from '@/components/ui/fields'
+import { useI18n } from '@/i18n/context'
 import { cn } from '@/lib/cn'
-import { formatBudget } from '@/lib/format'
 import type { PublicFilters, TransactionType } from '@/types'
 import { buildLocationGroups } from '../locationOptions'
 import { ALL_BUDGET_STEPS, BUDGET_STEPS, type SearchCriteria } from '../searchParams'
@@ -27,6 +27,7 @@ function Group({ title, children, as = 'fieldset' }: { title: string; children: 
 
 /** Champ texte : validation à l'Entrée ou après une courte pause de saisie. */
 function SearchInput({ initial, onCommit }: { initial: string; onCommit: (q: string) => void }) {
+  const { t } = useI18n()
   const [value, setValue] = useState(initial)
   const submit = (v: string) => {
     if (v.trim() !== initial) onCommit(v.trim())
@@ -46,7 +47,7 @@ function SearchInput({ initial, onCommit }: { initial: string; onCommit: (q: str
       }}
     >
       <label htmlFor="catalog-q" className="sr-only">
-        Rechercher par mot-clé
+        {t.catalog.panel.keywordLabel}
       </label>
       <div className="relative">
         <Search aria-hidden="true" className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-mist-400" />
@@ -55,7 +56,7 @@ function SearchInput({ initial, onCommit }: { initial: string; onCommit: (q: str
           type="search"
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          placeholder="Piscine, vue mer, meublé…"
+          placeholder={t.catalog.panel.keywordPlaceholder}
           maxLength={200}
           enterKeyHint="search"
           className="h-12 w-full rounded-xl border border-mist-300 bg-white pr-4 pl-11 text-[0.9375rem] outline-none placeholder:text-mist-400 hover:border-mist-400 focus:border-navy-600 focus:ring-4 focus:ring-navy-100"
@@ -82,6 +83,8 @@ export function FilterPanel({
   onReset: () => void
   activeCount: number
 }) {
+  const { t, fmt } = useI18n()
+  const l = t.catalog.panel
   const transaction = criteria.transaction ?? fixedTransaction
   const types = filters?.property_types ?? []
   const groups = buildLocationGroups(filters)
@@ -96,7 +99,7 @@ export function FilterPanel({
   return (
     <div>
       <div className="flex items-center justify-between pb-5">
-        <h2 className="font-display text-xl font-medium text-navy-900">Affiner la recherche</h2>
+        <h2 className="font-display text-xl font-medium text-navy-900">{l.title}</h2>
         {activeCount > 0 && (
           <button
             type="button"
@@ -104,22 +107,22 @@ export function FilterPanel({
             className="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-sm font-semibold text-brand-red-600 hover:bg-brand-red-50"
           >
             <RotateCcw aria-hidden="true" className="size-3.5" />
-            Réinitialiser
+            {l.reset}
           </button>
         )}
       </div>
 
-      <Group title="Mot-clé" as="div">
+      <Group title={l.keyword} as="div">
         <SearchInput key={criteria.q} initial={criteria.q} onCommit={(q) => onChange({ q, sort: q ? criteria.sort : criteria.sort === 'pertinence' ? 'recent' : criteria.sort })} />
       </Group>
 
-      <Group title="Projet">
+      <Group title={l.project}>
         <div className="grid grid-cols-3 gap-1 rounded-full bg-mist-100 p-1">
           {(
             [
-              [null, 'Tous'],
-              ['sale', 'Acheter'],
-              ['rent', 'Louer'],
+              [null, l.all],
+              ['sale', l.buy],
+              ['rent', l.rent],
             ] as const
           ).map(([value, label]) => (
             <label
@@ -142,21 +145,21 @@ export function FilterPanel({
         </div>
       </Group>
 
-      <Group title="Type de bien">
+      <Group title={l.type}>
         {types.length === 0 ? (
-          <p className="text-sm text-mist-500">Chargement des catégories…</p>
+          <p className="text-sm text-mist-500">{l.loadingTypes}</p>
         ) : (
           <ul className="space-y-2.5">
-            {types.map((t) => (
-              <li key={t.code} className="flex items-center justify-between gap-2">
+            {types.map((pt) => (
+              <li key={pt.code} className="flex items-center justify-between gap-2">
                 <CheckboxField
-                  label={t.label}
-                  checked={criteria.types.includes(t.code)}
-                  onChange={() => toggleType(t.code)}
-                  disabled={t.count === 0 && !criteria.types.includes(t.code)}
+                  label={fmt.propertyType(pt.code, pt.label)}
+                  checked={criteria.types.includes(pt.code)}
+                  onChange={() => toggleType(pt.code)}
+                  disabled={pt.count === 0 && !criteria.types.includes(pt.code)}
                 />
-                <span className="text-xs font-semibold text-mist-400 tabular-nums" aria-label={`${t.count} annonces`}>
-                  {t.count}
+                <span className="text-xs font-semibold text-mist-500 tabular-nums" aria-label={l.listingsCount(pt.count)}>
+                  {pt.count}
                 </span>
               </li>
             ))}
@@ -164,14 +167,14 @@ export function FilterPanel({
         )}
       </Group>
 
-      <Group title="Localisation">
+      <Group title={l.location}>
         <div className="space-y-3">
           <SelectField
-            label="Ville"
+            label={l.city}
             value={criteria.city ?? ''}
             onChange={(e) => onChange({ city: e.target.value || null, neighborhood: null })}
           >
-            <option value="">Toutes les villes</option>
+            <option value="">{l.allCities}</option>
             {groups.map((g) => (
               <option key={g.city.slug} value={g.city.slug}>
                 {g.city.name} ({g.city.count})
@@ -179,13 +182,13 @@ export function FilterPanel({
             ))}
           </SelectField>
           <SelectField
-            label="Quartier"
+            label={l.neighborhood}
             value={criteria.neighborhood ?? ''}
             onChange={(e) => onChange({ neighborhood: e.target.value || null })}
             disabled={!selectedGroup || selectedGroup.neighborhoods.length === 0}
-            hint={!criteria.city ? 'Choisissez d’abord une ville.' : undefined}
+            hint={!criteria.city ? l.chooseCity : undefined}
           >
-            <option value="">Tous les quartiers</option>
+            <option value="">{l.allNeighborhoods}</option>
             {selectedGroup?.neighborhoods.map((n) => (
               <option key={n.slug} value={n.slug}>
                 {n.name} ({n.count})
@@ -195,36 +198,36 @@ export function FilterPanel({
         </div>
       </Group>
 
-      <Group title="Budget (FCFA)">
+      <Group title={l.budget}>
         <div className="grid grid-cols-2 gap-3">
           <SelectField
-            label="Minimum"
+            label={l.min}
             value={criteria.minPrice ?? ''}
             onChange={(e) => onChange({ minPrice: e.target.value ? Number(e.target.value) : null })}
           >
-            <option value="">Indifférent</option>
-            {steps.map((s) => (
-              <option key={s} value={s} disabled={criteria.maxPrice !== null && s > criteria.maxPrice}>
-                {formatBudget(s)}
+            <option value="">{l.any}</option>
+            {steps.map((step) => (
+              <option key={step} value={step} disabled={criteria.maxPrice !== null && step > criteria.maxPrice}>
+                {fmt.budget(step)}
               </option>
             ))}
           </SelectField>
           <SelectField
-            label="Maximum"
+            label={l.max}
             value={criteria.maxPrice ?? ''}
             onChange={(e) => onChange({ maxPrice: e.target.value ? Number(e.target.value) : null })}
           >
-            <option value="">Indifférent</option>
-            {steps.map((s) => (
-              <option key={s} value={s} disabled={criteria.minPrice !== null && s < criteria.minPrice}>
-                {formatBudget(s)}
+            <option value="">{l.any}</option>
+            {steps.map((step) => (
+              <option key={step} value={step} disabled={criteria.minPrice !== null && step < criteria.minPrice}>
+                {fmt.budget(step)}
               </option>
             ))}
           </SelectField>
         </div>
       </Group>
 
-      <Group title="Chambres (minimum)">
+      <Group title={l.bedrooms}>
         <div className="flex flex-wrap gap-2">
           {BEDROOM_OPTIONS.map((n) => (
             <label
@@ -243,15 +246,15 @@ export function FilterPanel({
                 checked={criteria.minBedrooms === n}
                 onChange={() => onChange({ minBedrooms: n })}
               />
-              {n === null ? 'Toutes' : `${n}+`}
+              {n === null ? l.allBedrooms : `${n}+`}
             </label>
           ))}
         </div>
       </Group>
 
-      <Group title="Disponibilité" as="div">
+      <Group title={l.availability} as="div">
         <CheckboxField
-          label="Masquer les biens vendus, loués ou sous option"
+          label={l.availableOnly}
           checked={criteria.availableOnly}
           onChange={(e) => onChange({ availableOnly: e.target.checked })}
         />

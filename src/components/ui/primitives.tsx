@@ -1,5 +1,6 @@
 import type { ComponentProps, ReactNode } from 'react'
 import { AlertCircle, CheckCircle2, Info, Loader2 } from 'lucide-react'
+import { useI18n } from '@/i18n/context'
 import { cn } from '@/lib/cn'
 
 export function Container({ className, ...rest }: ComponentProps<'div'>) {
@@ -85,10 +86,11 @@ export function Skeleton({ className }: { className?: string }) {
 }
 
 export function Spinner({ className, label }: { className?: string; label?: string }) {
+  const { t } = useI18n()
   return (
     <span role="status" className="inline-flex items-center gap-2">
       <Loader2 aria-hidden="true" className={cn('size-5 animate-spin', className)} />
-      <span className={label ? '' : 'sr-only'}>{label ?? 'Chargement…'}</span>
+      <span className={label ? '' : 'sr-only'}>{label ?? t.common.loading}</span>
     </span>
   )
 }

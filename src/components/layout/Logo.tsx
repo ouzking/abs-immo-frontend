@@ -1,4 +1,5 @@
-import { Link } from 'react-router'
+import { useI18n } from '@/i18n/context'
+import { Link } from '@/i18n/Link'
 import { cn } from '@/lib/cn'
 
 /**
@@ -31,8 +32,9 @@ export function LogoImage({ className, eager = false }: { className?: string; ea
 }
 
 export function Logo({ className }: { className?: string }) {
+  const { t } = useI18n()
   return (
-    <Link to="/" className={cn('inline-flex shrink-0 items-center', className)} aria-label="ABS IMMO & SERVICES — accueil">
+    <Link to="/" className={cn('inline-flex shrink-0 items-center', className)} aria-label={t.nav.homeLink}>
       <LogoImage eager className="h-11 sm:h-12" />
     </Link>
   )

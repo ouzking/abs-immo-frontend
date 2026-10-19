@@ -4,6 +4,8 @@
  * - Pages statiques : toujours incluses.
  * - Annonces : lues dans la vue publique `public_properties` (annonces publiées
  *   uniquement, via la clé publishable — mêmes droits qu'un visiteur).
+ * - Langues : français (racine) et anglais (/en), reliés par des liens hreflang.
+ *   Le wolof n'est pas listé tant que sa traduction n'est pas relue (pages noindex).
  * - Sans VITE_SITE_URL, aucun sitemap n'est produit (les URL doivent être absolues)
  *   et robots.txt n'y fait pas référence.
  *
@@ -21,6 +23,7 @@ const siteUrl = env.VITE_SITE_URL?.trim().replace(/\/+$/, '')
 const supabaseUrl = env.VITE_SUPABASE_URL?.trim().replace(/\/+$/, '')
 const supabaseKey = (env.VITE_SUPABASE_PUBLISHABLE_KEY ?? env.VITE_SUPABASE_ANON_KEY)?.trim()
 const outDir = resolve(process.cwd(), 'dist')
+const NL = '\n'
 
 const STATIC_PAGES: Array<{ path: string; priority: string; changefreq: string }> = [
   { path: '/', priority: '1.0', changefreq: 'daily' },
@@ -32,6 +35,9 @@ const STATIC_PAGES: Array<{ path: string; priority: string; changefreq: string }
   { path: '/mentions-legales', priority: '0.2', changefreq: 'yearly' },
   { path: '/confidentialite', priority: '0.2', changefreq: 'yearly' },
 ]
+
+const INDEXED_LOCALES = ['fr', 'en'] as const
+type IndexedLocale = (typeof INDEXED_LOCALES)[number]
 
 interface ListingRow {
   slug: string
@@ -60,12 +66,30 @@ async function fetchListings(): Promise<ListingRow[]> {
   return rows
 }
 
+function localizedUrl(base: string, path: string, locale: IndexedLocale): string {
+  if (locale === 'fr') return `${base}${path}`
+  return `${base}/${locale}${path === '/' ? '' : path}`
+}
+
+/** Une entrée <url> par langue, chacune annonçant toutes les versions (hreflang + x-default). */
+function sitemapEntries(base: string, path: string, lastmod: string | null, changefreq: string, priority: string): string[] {
+  const alternates =
+    INDEXED_LOCALES.map(
+      (l) => `<xhtml:link rel="alternate" hreflang="${l}" href="${xmlEscape(localizedUrl(base, path, l))}"/>`,
+    ).join('') + `<xhtml:link rel="alternate" hreflang="x-default" href="${xmlEscape(localizedUrl(base, path, 'fr'))}"/>`
+  return INDEXED_LOCALES.map(
+    (l) =>
+      `  <url><loc>${xmlEscape(localizedUrl(base, path, l))}</loc>${alternates}` +
+      `${lastmod ? `<lastmod>${lastmod}</lastmod>` : ''}<changefreq>${changefreq}</changefreq><priority>${priority}</priority></url>`,
+  )
+}
+
 async function main() {
   if (!existsSync(outDir)) throw new Error('dist/ introuvable : lancez `vite build` avant ce script.')
 
   if (!siteUrl) {
     console.warn('[seo] VITE_SITE_URL absent : pas de sitemap.xml ; robots.txt minimal.')
-    writeFileSync(resolve(outDir, 'robots.txt'), 'User-agent: *\nAllow: /\n')
+    writeFileSync(resolve(outDir, 'robots.txt'), ['User-agent: *', 'Allow: /', ''].join(NL))
     return
   }
 
@@ -79,21 +103,23 @@ async function main() {
 
   const today = new Date().toISOString().slice(0, 10)
   const urls = [
-    ...STATIC_PAGES.map(
-      (p) =>
-        `  <url><loc>${xmlEscape(siteUrl + p.path)}</loc><lastmod>${today}</lastmod><changefreq>${p.changefreq}</changefreq><priority>${p.priority}</priority></url>`,
-    ),
-    ...listings.map(
-      (l) =>
-        `  <url><loc>${xmlEscape(`${siteUrl}/biens/${encodeURIComponent(l.slug)}`)}</loc>${
-          l.updated_at ? `<lastmod>${l.updated_at.slice(0, 10)}</lastmod>` : ''
-        }<changefreq>weekly</changefreq><priority>0.8</priority></url>`,
+    ...STATIC_PAGES.flatMap((p) => sitemapEntries(siteUrl, p.path, today, p.changefreq, p.priority)),
+    ...listings.flatMap((l) =>
+      sitemapEntries(siteUrl, `/biens/${encodeURIComponent(l.slug)}`, l.updated_at?.slice(0, 10) ?? null, 'weekly', '0.8'),
     ),
   ]
-  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`
+  const sitemap = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
+    ...urls,
+    '</urlset>',
+    '',
+  ].join(NL)
   writeFileSync(resolve(outDir, 'sitemap.xml'), sitemap)
-  writeFileSync(resolve(outDir, 'robots.txt'), `User-agent: *\nAllow: /\n\nSitemap: ${siteUrl}/sitemap.xml\n`)
-  console.log(`[seo] sitemap.xml : ${STATIC_PAGES.length} pages + ${listings.length} annonces ; robots.txt écrit.`)
+  writeFileSync(resolve(outDir, 'robots.txt'), ['User-agent: *', 'Allow: /', '', `Sitemap: ${siteUrl}/sitemap.xml`, ''].join(NL))
+  console.log(
+    `[seo] sitemap.xml : ${STATIC_PAGES.length} pages + ${listings.length} annonces, en ${INDEXED_LOCALES.join(' et ')} (${urls.length} URL) ; robots.txt écrit.`,
+  )
 }
 
 main().catch((error: unknown) => {

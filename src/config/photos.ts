@@ -5,23 +5,24 @@
  * contexte et ne représentent JAMAIS un bien commercialisé.
  */
 export interface PhotoAsset {
+  /** Clé des textes alternatifs traduits (messages.photos). */
+  id: 'corniche' | 'quartiers' | 'coucherSoleil'
   name: string
   widths: number[]
   fallbackWidth: number
   width: number
   height: number
-  alt: string
   credit: { author: string; license: string; licenseUrl: string; source: string }
 }
 
 export const PHOTOS = {
   corniche: {
+    id: 'corniche',
     name: 'dakar-corniche',
     widths: [768, 1280, 1920, 2560],
     fallbackWidth: 1920,
     width: 3619,
     height: 2036,
-    alt: 'Vue aérienne du littoral de Dakar, ses plages et ses quartiers résidentiels',
     credit: {
       author: 'Jeff Attaway',
       license: 'CC BY 2.0',
@@ -30,12 +31,12 @@ export const PHOTOS = {
     },
   },
   quartiers: {
+    id: 'quartiers',
     name: 'dakar-quartiers',
     widths: [480, 800, 1200],
     fallbackWidth: 1200,
     width: 1936,
     height: 2420,
-    alt: 'Immeubles et maisons d’un quartier résidentiel de Dakar',
     credit: {
       author: 'Jeff Attaway',
       license: 'CC BY 2.0',
@@ -44,12 +45,12 @@ export const PHOTOS = {
     },
   },
   coucherSoleil: {
+    id: 'coucherSoleil',
     name: 'dakar-coucher-soleil',
     widths: [768, 1280, 1920],
     fallbackWidth: 1920,
     width: 6000,
     height: 2625,
-    alt: 'Silhouette de Dakar au coucher du soleil, vue depuis l’île de Gorée',
     credit: {
       author: 'Fawaz.tairou',
       license: 'CC BY 4.0',

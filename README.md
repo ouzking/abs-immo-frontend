@@ -10,7 +10,8 @@ aucune table, aucun bucket, aucune fonction, et n'utilise aucune clé secrète.
 | | |
 |---|---|
 | Stack | React 19, TypeScript strict, Vite 8, Tailwind CSS 4, React Router 7, supabase-js 2, React Hook Form + Zod, Lucide |
-| Tests | Vitest 5 + Testing Library (65 tests) |
+| Tests | Vitest 5 + Testing Library (74 tests) |
+| Langues | Français (`/`), anglais (`/en`), wolof partiel (`/wo`, non indexé) — voir [docs/I18N.md](docs/I18N.md) |
 | Rendu | Application monopage (SPA) — voir [docs/SEO.md](docs/SEO.md) pour les limites et l'option SSR |
 
 ## Démarrage rapide
@@ -98,6 +99,7 @@ src/
     query.ts                  cache de requêtes minimal (déduplication, données précédentes conservées)
     errors.ts                 AppError : toute erreur technique devient un message lisible
     format.ts                 prix FCFA, surfaces, téléphones, liens tel:/WhatsApp
+  i18n/                       langues : config, dictionnaires (fr, en, wo), formateurs, liens localisés
   types/                      réexport du contrat ; backend/ = copie non modifiée des types du backend
   features/
     properties/               service (vues/RPC), hooks, carte, galerie, détails, contact du bien
@@ -144,6 +146,7 @@ Rien n'est inventé : tant qu'une information n'est pas fournie, elle n'est pas 
 - [docs/BACKEND_INTEGRATION.md](docs/BACKEND_INTEGRATION.md) — ressources Supabase utilisées, erreurs, évolution du contrat
 - [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — build, hébergement, en-têtes, checklist de mise en production
 - [docs/SEO.md](docs/SEO.md) — ce qui est en place, limites d'une SPA, option SSR/pré-rendu
+- [docs/I18N.md](docs/I18N.md) — langues, contenus restant en français, relecture du wolof
 
 ## Qualité mesurée (build de production local, Lighthouse mobile, 17/10/2026)
 

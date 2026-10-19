@@ -15,10 +15,9 @@ import {
   Ruler,
   Toilet,
 } from 'lucide-react'
-import { formatPrice, formatSurface, plural } from '@/lib/format'
+import { useI18n, type I18nValue } from '@/i18n/context'
 import type { LegalStatus } from '@/types'
 import type { PropertyDetailView } from '../api/propertiesService'
-import { AMENITY_CATEGORY_LABELS, LEGAL_STATUS_LABELS } from '../labels'
 
 interface Fact {
   icon: LucideIcon
@@ -27,35 +26,36 @@ interface Fact {
 }
 
 /** Caractéristiques chiffrées : uniquement celles renseignées par l'agence. */
-function buildKeyFacts(p: PropertyDetailView): Fact[] {
+function buildKeyFacts(p: PropertyDetailView, { t, fmt }: I18nValue): Fact[] {
+  const f = t.property.facts
   const facts: Array<Fact | null> = [
-    p.surface_area ? { icon: Ruler, label: 'Surface', value: formatSurface(p.surface_area, p.surface_unit)! } : null,
-    p.land_area ? { icon: LandPlot, label: 'Terrain', value: formatSurface(p.land_area, 'sqm')! } : null,
-    p.rooms ? { icon: DoorOpen, label: 'Pièces', value: String(p.rooms) } : null,
-    p.bedrooms ? { icon: BedDouble, label: 'Chambres', value: String(p.bedrooms) } : null,
-    p.bathrooms ? { icon: Bath, label: 'Salles de bain', value: String(p.bathrooms) } : null,
-    p.toilets ? { icon: Toilet, label: 'Toilettes', value: String(p.toilets) } : null,
+    p.surface_area ? { icon: Ruler, label: f.surface, value: fmt.surface(p.surface_area, p.surface_unit)! } : null,
+    p.land_area ? { icon: LandPlot, label: f.land, value: fmt.surface(p.land_area, 'sqm')! } : null,
+    p.rooms ? { icon: DoorOpen, label: f.rooms, value: String(p.rooms) } : null,
+    p.bedrooms ? { icon: BedDouble, label: f.bedrooms, value: String(p.bedrooms) } : null,
+    p.bathrooms ? { icon: Bath, label: f.bathrooms, value: String(p.bathrooms) } : null,
+    p.toilets ? { icon: Toilet, label: f.toilets, value: String(p.toilets) } : null,
     p.floor !== null && p.floor !== undefined
       ? {
           icon: Layers,
-          label: 'Étage',
-          value: `${p.floor === 0 ? 'Rez-de-chaussée' : `${p.floor}e`}${p.total_floors ? ` sur ${p.total_floors}` : ''}`,
+          label: f.floor,
+          value: p.floor === 0 ? t.units.groundFloor : t.units.floor(p.floor, p.total_floors),
         }
       : null,
-    p.parking_spaces ? { icon: Car, label: 'Stationnement', value: plural(p.parking_spaces, 'place') } : null,
-    p.year_built ? { icon: CalendarDays, label: 'Construction', value: String(p.year_built) } : null,
+    p.parking_spaces ? { icon: Car, label: f.parking, value: t.units.parking(p.parking_spaces) } : null,
+    p.year_built ? { icon: CalendarDays, label: f.year, value: String(p.year_built) } : null,
     p.is_furnished !== null && p.is_furnished !== undefined
-      ? { icon: Armchair, label: 'Ameublement', value: p.is_furnished ? 'Meublé' : 'Non meublé' }
+      ? { icon: Armchair, label: f.furnishing, value: p.is_furnished ? f.furnished : f.unfurnished }
       : null,
     p.legal_status
-      ? { icon: FileCheck2, label: 'Statut juridique', value: LEGAL_STATUS_LABELS[p.legal_status as LegalStatus] ?? p.legal_status }
+      ? { icon: FileCheck2, label: f.legal, value: t.labels.legal[p.legal_status as LegalStatus] ?? p.legal_status }
       : null,
   ]
   return facts.filter((f): f is Fact => f !== null)
 }
 
 export function KeyFacts({ property }: { property: PropertyDetailView }) {
-  const facts = buildKeyFacts(property)
+  const facts = buildKeyFacts(property, useI18n())
   if (facts.length === 0) return null
   return (
     // Bordures portées par les cellules ; la marge négative masque celles du bord : pas de case vide colorée.
@@ -105,10 +105,12 @@ export function Paragraphs({ text }: { text: string }) {
 }
 
 export function AmenityList({ amenities }: { amenities: PropertyDetailView['amenities'] }) {
+  const { t, fmt } = useI18n()
+  const categories: Record<string, string> = t.labels.amenityCategories
   const groups = new Map<string, string[]>()
   for (const a of amenities) {
-    const key = AMENITY_CATEGORY_LABELS[a.category] ?? 'Autres'
-    groups.set(key, [...(groups.get(key) ?? []), a.label])
+    const key = categories[a.category] ?? t.labels.amenityCategories.other
+    groups.set(key, [...(groups.get(key) ?? []), fmt.amenity(a.code, a.label)])
   }
   return (
     <div className="grid gap-8 sm:grid-cols-2">
@@ -132,12 +134,13 @@ export function AmenityList({ amenities }: { amenities: PropertyDetailView['amen
 }
 
 export function FeatureList({ features }: { features: PropertyDetailView['features'] }) {
+  const { t } = useI18n()
   return (
     <dl className="divide-y divide-mist-200 rounded-card ring-1 ring-mist-200">
       {features.map((f, i) => (
         <div key={`${f.label}-${i}`} className="flex flex-wrap justify-between gap-2 px-5 py-3.5">
           <dt className="text-mist-600">{f.label}</dt>
-          <dd className="font-semibold text-navy-900">{f.value ?? <Check aria-label="Oui" className="size-4" />}</dd>
+          <dd className="font-semibold text-navy-900">{f.value ?? <Check aria-label={t.property.facts.yes} className="size-4" />}</dd>
         </div>
       ))}
     </dl>
@@ -146,10 +149,11 @@ export function FeatureList({ features }: { features: PropertyDetailView['featur
 
 /** Conditions financières renseignées (dépôt, honoraires, négociation). */
 export function FinancialTerms({ property: p }: { property: PropertyDetailView }) {
+  const { t, fmt } = useI18n()
   const rows: Array<[string, string]> = []
-  if (p.deposit_amount) rows.push(['Dépôt de garantie', formatPrice(p.deposit_amount)])
-  if (p.agency_fee_amount) rows.push(['Honoraires d’agence', formatPrice(p.agency_fee_amount)])
-  if (p.price_negotiable) rows.push(['Prix', 'Négociable'])
+  if (p.deposit_amount) rows.push([t.property.terms.deposit, fmt.price(p.deposit_amount)])
+  if (p.agency_fee_amount) rows.push([t.property.terms.fee, fmt.price(p.agency_fee_amount)])
+  if (p.price_negotiable) rows.push([t.property.terms.price, t.property.terms.negotiable])
   if (rows.length === 0) return null
   return (
     <dl className="mt-4 space-y-2 border-t border-mist-200 pt-4 text-sm">
@@ -164,20 +168,21 @@ export function FinancialTerms({ property: p }: { property: PropertyDetailView }
 }
 
 export function LocationBlock({ property: p }: { property: PropertyDetailView }) {
+  const { t } = useI18n()
   const parts = [p.address_line, p.neighborhood_name, p.commune_name, p.city_name, p.region_name].filter(
     (v, i, arr): v is string => !!v && arr.indexOf(v) === i,
   )
   const precisionNote =
     p.location_precision === 'exact'
       ? null
-      : 'Pour préserver la confidentialité du propriétaire, l’adresse exacte est communiquée lors de la prise de contact.'
+      : t.property.locationPrivacy
   return (
     <div className="flex gap-4 rounded-card bg-mist-50 p-5 ring-1 ring-mist-200">
       <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-navy-700 shadow-soft">
         <Building aria-hidden="true" className="size-5" />
       </span>
       <div>
-        <p className="font-bold text-navy-900">{p.location_label ?? (parts.join(', ') || 'Sénégal')}</p>
+        <p className="font-bold text-navy-900">{p.location_label ?? (parts.join(', ') || t.property.country)}</p>
         {p.location_label && parts.length > 0 && <p className="mt-1 text-mist-600">{parts.join(', ')}</p>}
         {precisionNote && <p className="mt-2 text-sm text-mist-500">{precisionNote}</p>}
         {p.latitude !== null && p.longitude !== null && p.location_precision !== 'hidden' && (
@@ -187,7 +192,8 @@ export function LocationBlock({ property: p }: { property: PropertyDetailView })
             rel="noopener noreferrer"
             className="mt-3 inline-block text-sm font-semibold text-navy-700 underline underline-offset-2"
           >
-            Voir le secteur sur une carte{p.location_precision === 'approximate' ? ' (position approximative)' : ''}
+            {t.property.map}
+            {p.location_precision === 'approximate' ? t.property.mapApprox : ''}
           </a>
         )}
       </div>

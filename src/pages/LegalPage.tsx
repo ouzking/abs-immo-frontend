@@ -5,6 +5,7 @@ import { Container, Skeleton } from '@/components/ui/primitives'
 import { LEGAL } from '@/config/legal'
 import { PHOTOS } from '@/config/photos'
 import { useAgency } from '@/features/agency/agencyService'
+import { useI18n } from '@/i18n/context'
 import { formatPhone } from '@/lib/format'
 
 function Block({ title, id, children }: { title: string; id?: string; children: ReactNode }) {
@@ -29,23 +30,25 @@ function Row({ label, value }: { label: string; value: ReactNode }) {
 
 export default function LegalPage() {
   const { data: agency, status } = useAgency()
+  const { t } = useI18n()
+  const l = t.legal
   const rows: Array<[string, ReactNode]> = []
   if (agency) {
-    rows.push(['Dénomination', agency.legalName ?? agency.name])
-    if (agency.address) rows.push(['Siège', agency.address])
+    rows.push([l.name, agency.legalName ?? agency.name])
+    if (agency.address) rows.push([l.office, agency.address])
     if (agency.rccm) rows.push(['RCCM', agency.rccm])
     if (agency.ninea) rows.push(['NINEA', agency.ninea])
-    if (agency.phone) rows.push(['Téléphone', formatPhone(agency.phone)])
-    if (agency.email) rows.push(['E-mail', agency.email])
+    if (agency.phone) rows.push([l.phone, formatPhone(agency.phone)])
+    if (agency.email) rows.push([l.email, agency.email])
   }
-  if (LEGAL.publicationDirector) rows.push(['Directeur de la publication', LEGAL.publicationDirector])
+  if (LEGAL.publicationDirector) rows.push([l.director, LEGAL.publicationDirector])
 
   return (
     <>
-      <Seo title="Mentions légales" description="Mentions légales du site ABS IMMO & SERVICES : éditeur, hébergement, propriété intellectuelle et crédits." />
-      <PageHeader title="Mentions légales" crumbs={[{ name: 'Accueil', path: '/' }, { name: 'Mentions légales' }]} />
+      <Seo title={l.title} description={l.seoDescription} />
+      <PageHeader title={l.title} crumbs={[{ name: t.common.home, path: '/' }, { name: l.title }]} />
       <Container className="max-w-4xl py-16 lg:py-20">
-        <Block title="Éditeur du site">
+        <Block title={l.publisher}>
           {status === 'loading' ? (
             <Skeleton className="h-32" />
           ) : (
@@ -58,7 +61,7 @@ export default function LegalPage() {
         </Block>
 
         {LEGAL.hostingProvider && (
-          <Block title="Hébergement">
+          <Block title={l.hosting}>
             <p>
               {LEGAL.hostingProvider.name} — {LEGAL.hostingProvider.address} —{' '}
               <a href={LEGAL.hostingProvider.website} className="underline" target="_blank" rel="noopener noreferrer">
@@ -68,48 +71,33 @@ export default function LegalPage() {
           </Block>
         )}
 
-        <Block title="Annonces immobilières">
-          <p>
-            Les annonces sont publiées par ABS IMMO & SERVICES à partir des informations dont l’agence dispose. Elles
-            sont fournies à titre indicatif, n’ont pas de valeur contractuelle et peuvent être modifiées ou retirées à
-            tout moment. Le statut affiché (disponible, sous option, vendu, loué) est mis à jour par l’agence.
-          </p>
-          <p>
-            Les adresses exactes des biens ne sont publiées qu’avec l’accord de leur propriétaire ; à défaut, seule une
-            localisation approximative est indiquée.
-          </p>
+        <Block title={l.listingsTitle}>
+          <p>{l.listingsP1}</p>
+          <p>{l.listingsP2}</p>
         </Block>
 
-        <Block title="Propriété intellectuelle">
-          <p>
-            Le logo, la marque ABS IMMO & SERVICES ainsi que les photographies des biens sont la propriété de l’agence
-            ou de leurs auteurs. Toute reproduction sans autorisation est interdite.
-          </p>
+        <Block title={l.ipTitle}>
+          <p>{l.ipText}</p>
         </Block>
 
-        <Block title="Crédits" id="credits">
-          <p>
-            Les photographies de Dakar utilisées pour illustrer le site ne représentent pas des biens proposés par
-            l’agence. Elles sont publiées sous licence Creative Commons :
-          </p>
+        <Block title={l.creditsTitle} id="credits">
+          <p>{l.creditsIntro}</p>
           <ul className="mt-4 list-disc space-y-2 pl-5">
             {Object.values(PHOTOS).map((photo) => (
               <li key={photo.name}>
-                {photo.alt} — {photo.credit.author},{' '}
+                {t.photos[photo.id]} — {photo.credit.author},{' '}
                 <a href={photo.credit.licenseUrl} target="_blank" rel="noopener noreferrer license" className="underline">
                   {photo.credit.license}
                 </a>
-                , via{' '}
+                , {l.creditsVia}{' '}
                 <a href={photo.credit.source} target="_blank" rel="noopener noreferrer" className="underline">
                   Wikimedia Commons
                 </a>{' '}
-                (image recadrée et compressée).
+                {l.creditsEdit}
               </li>
             ))}
           </ul>
-          <p className="mt-4">
-            Icônes : Lucide (licence ISC) et Simple Icons (CC0). Polices : Fraunces et Manrope (SIL Open Font License).
-          </p>
+          <p className="mt-4">{l.creditsOther}</p>
         </Block>
       </Container>
     </>

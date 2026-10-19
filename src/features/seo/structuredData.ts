@@ -14,14 +14,14 @@ function compact<T extends JsonLd>(obj: T): T {
   ) as T
 }
 
-export function agencyJsonLd(agency: AgencyInfo | undefined): JsonLd {
+export function agencyJsonLd(agency: AgencyInfo | undefined, localize: (path: string) => string = (x) => x): JsonLd {
   return compact({
     '@context': 'https://schema.org',
     '@type': 'RealEstateAgent',
     '@id': absoluteUrl('/#agence'),
     name: agency?.name ?? SITE.name,
     legalName: agency?.legalName,
-    url: absoluteUrl('/'),
+    url: absoluteUrl(localize('/')),
     logo: absoluteUrl(SITE.logo),
     image: absoluteUrl(SITE.defaultImage),
     description: agency?.description ?? agency?.tagline,
@@ -59,8 +59,8 @@ const AVAILABILITY: Record<string, string> = {
  * Annonce : RealEstateListing + offre. Les photos (URL signées, temporaires)
  * ne sont volontairement pas déclarées : une URL expirée nuirait à l'indexation.
  */
-export function propertyJsonLd(p: PropertyDetailView): JsonLd {
-  const path = `/biens/${p.slug}`
+export function propertyJsonLd(p: PropertyDetailView, localize: (path: string) => string = (x) => x): JsonLd {
+  const path = localize(`/biens/${p.slug}`)
   return compact({
     '@context': 'https://schema.org',
     '@type': 'RealEstateListing',

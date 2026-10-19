@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import { Link } from 'react-router'
+import { useI18n } from '@/i18n/context'
+import { Link } from '@/i18n/Link'
 import { ChevronRight } from 'lucide-react'
 import { Container } from '@/components/ui/primitives'
 
@@ -9,8 +10,9 @@ export interface Crumb {
 }
 
 export function Breadcrumbs({ items, tone = 'dark' }: { items: Crumb[]; tone?: 'dark' | 'light' }) {
+  const { t } = useI18n()
   return (
-    <nav aria-label="Fil d’Ariane">
+    <nav aria-label={t.nav.breadcrumb}>
       <ol className={`flex flex-wrap items-center gap-1 text-sm ${tone === 'light' ? 'text-white/70' : 'text-mist-500'}`}>
         {items.map((item, i) => (
           <li key={item.name} className="flex items-center gap-1">

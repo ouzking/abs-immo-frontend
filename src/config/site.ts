@@ -22,27 +22,23 @@ export function absoluteUrl(path: string): string {
   return `${siteOrigin()}${path.startsWith('/') ? path : `/${path}`}`
 }
 
-/** Titre de page : « Titre | ABS IMMO & SERVICES » (titre par défaut sur l'accueil). */
-export function formatTitle(title?: string): string {
-  return title ? `${title} | ${SITE.name}` : SITE.defaultTitle
-}
-
 export interface NavItem {
   to: string
-  label: string
+  /** Clé du libellé dans messages.nav */
+  key: 'home' | 'buy' | 'rent' | 'properties' | 'about' | 'contact'
   end?: boolean
 }
 
 export const MAIN_NAV: NavItem[] = [
-  { to: '/', label: 'Accueil', end: true },
-  { to: '/acheter', label: 'Acheter' },
-  { to: '/louer', label: 'Louer' },
-  { to: '/biens', label: 'Nos biens' },
-  { to: '/a-propos', label: 'À propos' },
-  { to: '/contact', label: 'Contact' },
+  { to: '/', key: 'home', end: true },
+  { to: '/acheter', key: 'buy' },
+  { to: '/louer', key: 'rent' },
+  { to: '/biens', key: 'properties' },
+  { to: '/a-propos', key: 'about' },
+  { to: '/contact', key: 'contact' },
 ]
 
-export const LEGAL_NAV: NavItem[] = [
-  { to: '/mentions-legales', label: 'Mentions légales' },
-  { to: '/confidentialite', label: 'Confidentialité' },
+export const LEGAL_NAV: Array<{ to: string; key: 'legal' | 'privacy' }> = [
+  { to: '/mentions-legales', key: 'legal' },
+  { to: '/confidentialite', key: 'privacy' },
 ]

@@ -4,6 +4,7 @@ import { WhatsAppIcon } from '@/components/icons/BrandIcons'
 import { ButtonAnchor } from '@/components/ui/Button'
 import type { AgencyInfo } from '@/features/agency/agencyService'
 import { Skeleton } from '@/components/ui/primitives'
+import { useI18n } from '@/i18n/context'
 import { cn } from '@/lib/cn'
 import { formatPhone, telHref, whatsappHref } from '@/lib/format'
 import type { PropertyDetailView } from '../api/propertiesService'
@@ -17,7 +18,9 @@ const ViewingForm = lazy(() => import('@/features/contact/components/ViewingForm
 type Tab = 'info' | 'visit'
 
 export function PropertyContactCard({ property: p, agency }: { property: PropertyDetailView; agency: AgencyInfo | undefined }) {
-  const contact = propertyContact(p, agency)
+  const { t } = useI18n()
+  const c = t.property.contact
+  const contact = propertyContact(p, agency, t)
   // Le backend n'accepte les visites que pour un bien disponible ou réservé.
   const canVisit = !isNoLongerAvailable(p.commercial_status)
   const [tab, setTab] = useState<Tab>('info')
@@ -25,10 +28,10 @@ export function PropertyContactCard({ property: p, agency }: { property: Propert
   const formProperty = { id: p.id!, title: p.title ?? '', reference: p.reference }
   const tabs: Array<{ id: Tab; label: string }> = canVisit
     ? [
-        { id: 'info', label: 'Informations' },
-        { id: 'visit', label: 'Visite' },
+        { id: 'info', label: c.tabInfo },
+        { id: 'visit', label: c.tabVisit },
       ]
-    : [{ id: 'info', label: 'Demande d’informations' }]
+    : [{ id: 'info', label: c.infoTitle }]
 
   const onTabKey = (e: KeyboardEvent) => {
     if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return
@@ -70,18 +73,18 @@ export function PropertyContactCard({ property: p, agency }: { property: Propert
               variant="outline"
               className={cn(!contact.whatsapp && 'col-span-2')}
               icon={<Phone aria-hidden="true" className="size-4" />}
-              aria-label={`Appeler le ${formatPhone(contact.phone)}`}
+              aria-label={t.common.callNumber(formatPhone(contact.phone) ?? contact.phone)}
             >
-              Appeler
+              {t.common.call}
             </ButtonAnchor>
           )}
           {contact.whatsapp && (
             <ButtonAnchor
-              href={whatsappHref(contact.whatsapp, whatsappMessage(p))}
+              href={whatsappHref(contact.whatsapp, whatsappMessage(p, t))}
               variant="outline"
               className={cn('text-[#16723d]', !contact.phone && 'col-span-2')}
               icon={<WhatsAppIcon className="size-4" />}
-              aria-label="Écrire sur WhatsApp à propos de ce bien (nouvel onglet)"
+              aria-label={c.whatsappLabel}
             >
               WhatsApp
             </ButtonAnchor>
@@ -91,7 +94,7 @@ export function PropertyContactCard({ property: p, agency }: { property: Propert
 
       <div className="p-5">
         {tabs.length > 1 ? (
-          <div role="tablist" aria-label="Type de demande" className="grid grid-cols-2 gap-1 rounded-full bg-mist-100 p-1" onKeyDown={onTabKey}>
+          <div role="tablist" aria-label={c.requestType} className="grid grid-cols-2 gap-1 rounded-full bg-mist-100 p-1" onKeyDown={onTabKey}>
             {tabs.map((t) => (
               <button
                 key={t.id}

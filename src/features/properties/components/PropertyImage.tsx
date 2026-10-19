@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ImageOff } from 'lucide-react'
+import { useI18n } from '@/i18n/context'
 import { cn } from '@/lib/cn'
 
 /**
@@ -53,6 +54,7 @@ export function PropertyImage({
 }
 
 function ImageFallback() {
+  const { t } = useI18n()
   return (
     <div className="@container flex size-full flex-col items-center justify-center gap-2 bg-linear-to-br from-navy-50 to-mist-100 text-navy-300">
       <svg viewBox="0 0 120 64" aria-hidden="true" className="w-28 max-w-[55%] text-navy-200" fill="none" stroke="currentColor" strokeWidth="2">
@@ -62,7 +64,7 @@ function ImageFallback() {
       {/* Libellé masqué dans les petites vignettes (requête de conteneur). */}
       <span className="hidden items-center gap-1.5 text-xs font-semibold tracking-wide text-navy-400 @[12rem]:flex">
         <ImageOff aria-hidden="true" className="size-3.5" />
-        Photo bientôt disponible
+        {t.common.photoComingSoon}
       </span>
     </div>
   )

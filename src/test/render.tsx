@@ -2,10 +2,14 @@ import type { ReactElement } from 'react'
 import { render } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { routes } from '@/app/router'
+import type { Locale } from '@/i18n/config'
+import { I18nProvider } from '@/i18n/I18nProvider'
 
 /** Rend un composant isolé dans un routeur mémoire (liens, useParams, useSearchParams). */
-export function renderWithRouter(ui: ReactElement, path = '/') {
-  const router = createMemoryRouter([{ path: '*', element: ui }], { initialEntries: [path] })
+export function renderWithRouter(ui: ReactElement, path = '/', locale: Locale = 'fr') {
+  const router = createMemoryRouter([{ path: '*', element: <I18nProvider locale={locale}>{ui}</I18nProvider> }], {
+    initialEntries: [path],
+  })
   return { router, ...render(<RouterProvider router={router} />) }
 }
 
