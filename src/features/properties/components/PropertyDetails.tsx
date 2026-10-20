@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { lazy, Suspense, useState, type ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import {
   Armchair,
@@ -12,12 +12,16 @@ import {
   FileCheck2,
   Layers,
   LandPlot,
+  Map as MapIcon,
   Ruler,
   Toilet,
 } from 'lucide-react'
 import { useI18n, type I18nValue } from '@/i18n/context'
 import type { LegalStatus } from '@/types'
 import type { PropertyDetailView } from '../api/propertiesService'
+
+// Carte (Leaflet, ~45 Ko) chargée seulement si le visiteur la demande.
+const PropertyMapView = lazy(() => import('./PropertyMapView'))
 
 interface Fact {
   icon: LucideIcon
@@ -169,6 +173,9 @@ export function FinancialTerms({ property: p }: { property: PropertyDetailView }
 
 export function LocationBlock({ property: p }: { property: PropertyDetailView }) {
   const { t } = useI18n()
+  const [showMap, setShowMap] = useState(false)
+  const hasCoords = p.latitude !== null && p.longitude !== null && p.location_precision !== 'hidden'
+  const exact = p.location_precision === 'exact'
   const parts = [p.address_line, p.neighborhood_name, p.commune_name, p.city_name, p.region_name].filter(
     (v, i, arr): v is string => !!v && arr.indexOf(v) === i,
   )
@@ -177,6 +184,7 @@ export function LocationBlock({ property: p }: { property: PropertyDetailView })
       ? null
       : t.property.locationPrivacy
   return (
+    <div className="space-y-4">
     <div className="flex gap-4 rounded-card bg-mist-50 p-5 ring-1 ring-mist-200">
       <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-navy-700 shadow-soft">
         <Building aria-hidden="true" className="size-5" />
@@ -185,18 +193,42 @@ export function LocationBlock({ property: p }: { property: PropertyDetailView })
         <p className="font-bold text-navy-900">{p.location_label ?? (parts.join(', ') || t.property.country)}</p>
         {p.location_label && parts.length > 0 && <p className="mt-1 text-mist-600">{parts.join(', ')}</p>}
         {precisionNote && <p className="mt-2 text-sm text-mist-500">{precisionNote}</p>}
-        {p.latitude !== null && p.longitude !== null && p.location_precision !== 'hidden' && (
+        {hasCoords && !showMap && (
+          <button
+            type="button"
+            onClick={() => setShowMap(true)}
+            className="mt-4 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-navy-800 shadow-soft ring-1 ring-mist-200 hover:ring-navy-300"
+          >
+            <MapIcon aria-hidden="true" className="size-4" />
+            {t.property.mapShow}
+          </button>
+        )}
+        {hasCoords && (
           <a
             href={`https://www.openstreetmap.org/?mlat=${p.latitude}&mlon=${p.longitude}#map=${p.location_precision === 'exact' ? 17 : 14}/${p.latitude}/${p.longitude}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-3 inline-block text-sm font-semibold text-navy-700 underline underline-offset-2"
+            className="mt-3 block text-sm font-semibold text-navy-700 underline underline-offset-2"
           >
             {t.property.map}
             {p.location_precision === 'approximate' ? t.property.mapApprox : ''}
           </a>
         )}
       </div>
+    </div>
+      {hasCoords && showMap && (
+        <figure>
+          <Suspense fallback={<div className="skeleton h-72 rounded-card sm:h-80" />}>
+            <PropertyMapView
+              latitude={p.latitude!}
+              longitude={p.longitude!}
+              exact={exact}
+              label={t.property.mapLabel(p.title ?? t.property.fallbackTitle)}
+            />
+          </Suspense>
+          {!exact && <figcaption className="mt-2 text-sm text-mist-500">{t.property.mapApproxNote}</figcaption>}
+        </figure>
+      )}
     </div>
   )
 }

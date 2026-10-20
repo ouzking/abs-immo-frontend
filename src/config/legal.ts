@@ -6,8 +6,12 @@
 export const LEGAL = {
   /** Responsable de la publication (nom et qualité). */
   publicationDirector: null as string | null,
-  /** Hébergeur du site : raison sociale, adresse, site web. */
-  hostingProvider: null as { name: string; address: string; website: string } | null,
+  /** Hébergeur du site (adresse vérifiée sur vercel.com/legal le 20/10/2026). */
+  hostingProvider: {
+    name: 'Vercel Inc.',
+    address: '440 N Barranca Avenue #4133, Covina, CA 91723, États-Unis',
+    website: 'https://vercel.com',
+  } as { name: string; address: string; website: string } | null,
   /** Numéro de déclaration auprès de la CDP (Commission de protection des données personnelles), si obtenu. */
   cdpDeclaration: null as string | null,
 }

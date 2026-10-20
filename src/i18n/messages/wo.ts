@@ -185,6 +185,7 @@ export const wo: DeepPartial<Messages> = {
     amenities: 'Jumtukaay yi',
     location: 'Fan la nekk',
     similarTitle: 'Alal yu ni mel te am',
+    mapShow: 'Wone kart bi',
     contactButton: 'Jokkoo',
     facts: { surface: 'Yaatuwaay', bedrooms: 'Néeg', bathrooms: 'Néegu sangu' },
     gallery: { previous: 'Nataal bi jiitu', next: 'Nataal bi topp' },

@@ -381,7 +381,10 @@ export const fr = {
     },
     locationPrivacy:
       'Pour préserver la confidentialité du propriétaire, l’adresse exacte est communiquée lors de la prise de contact.',
-    map: 'Voir le secteur sur une carte',
+    map: 'Ouvrir dans OpenStreetMap',
+    mapShow: 'Afficher la carte',
+    mapLabel: (title: string) => `Carte de localisation : ${title}`,
+    mapApproxNote: 'Zone approximative (rayon d’environ 1 km) : l’emplacement exact n’est pas publié.',
     mapApprox: ' (position approximative)',
     gallery: {
       roleDescription: 'carrousel',
@@ -572,6 +575,9 @@ export const fr = {
     cookiesTitle: 'Cookies et mesure d’audience',
     cookiesText:
       'Ce site ne dépose aucun cookie publicitaire ni de mesure d’audience. Aucune donnée de navigation n’est conservée dans votre navigateur.',
+    mapTitle: 'Cartes',
+    mapText:
+      'Sur les fiches de biens, la carte n’est chargée que si vous cliquez sur « Afficher la carte » : votre navigateur contacte alors les serveurs d’OpenStreetMap, qui reçoivent votre adresse IP.',
     rightsTitle: 'Vos droits',
     rightsIntro:
       'Vous disposez d’un droit d’accès, de rectification, d’opposition et de suppression des données vous concernant. Pour l’exercer, contactez l’agence',

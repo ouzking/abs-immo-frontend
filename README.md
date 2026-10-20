@@ -40,6 +40,10 @@ VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_…   # valeur affichée par `supab
 VITE_SITE_URL=http://localhost:5173
 ```
 
+Pour tester un **build de production** (`npm run build` / `npm run preview`) contre la base locale, copiez
+aussi ces valeurs dans `.env.production.local` (non versionné) : sinon Vite utilise `.env.production`, qui
+pointe vers la base de production.
+
 Les annonces de démonstration du backend local n'ont **pas de photos** dans le Storage : les cartes
 affichent alors le visuel neutre « Photo bientôt disponible ». C'est le comportement attendu pour toute
 annonce dont la photo n'est pas accessible.

@@ -54,6 +54,10 @@ export default function PrivacyPage() {
           <p>{p.cookiesText}</p>
         </Block>
 
+        <Block title={p.mapTitle}>
+          <p>{p.mapText}</p>
+        </Block>
+
         <Block title={p.rightsTitle}>
           <p>
             {p.rightsIntro}

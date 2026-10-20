@@ -407,7 +407,10 @@ export const en: Messages = {
       negotiable: 'Negotiable',
     },
     locationPrivacy: 'To protect the owner’s privacy, the exact address is shared when you get in touch.',
-    map: 'View the area on a map',
+    map: 'Open in OpenStreetMap',
+    mapShow: 'Show map',
+    mapLabel: (title) => `Location map: ${title}`,
+    mapApproxNote: 'Approximate area (about 1 km radius): the exact location is not published.',
     mapApprox: ' (approximate location)',
     gallery: {
       roleDescription: 'carousel',
@@ -596,6 +599,9 @@ export const en: Messages = {
       'Your data is only accessible to authorised members of the agency team. It is hosted by our database provider (Supabase), on servers located in the European Union.',
     cookiesTitle: 'Cookies and analytics',
     cookiesText: 'This website sets no advertising or analytics cookies. No browsing data is stored in your browser.',
+    mapTitle: 'Maps',
+    mapText:
+      'On property pages, the map only loads if you click “Show map”: your browser then contacts OpenStreetMap servers, which receive your IP address.',
     rightsTitle: 'Your rights',
     rightsIntro:
       'You have the right to access, rectify, object to and delete data concerning you. To exercise these rights, contact the agency',
