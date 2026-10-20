@@ -1,7 +1,11 @@
-import '@testing-library/jest-dom/vitest'
+import * as matchers from '@testing-library/jest-dom/matchers'
 import { cleanup } from '@testing-library/react'
 import { clearQueryCache } from '@/lib/query'
 import { setSupabaseClientForTests } from '@/lib/supabase/client'
+
+// Matchers jest-dom enregistrés sur l'« expect » GLOBAL : l'import « @testing-library/jest-dom/vitest »
+// étendait parfois une autre instance du module vitest (« Invalid Chai property: toBeInTheDocument »).
+expect.extend(matchers)
 
 // jsdom n'implémente ni matchMedia, ni <dialog>.showModal, ni scrollIntoView.
 if (!window.matchMedia) {
