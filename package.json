@@ -54,6 +54,6 @@
   },
   "description": "Site public d'ABS IMMO & SERVICES (React, Vite, Supabase).",
   "engines": {
-    "node": ">=20.19"
+    "node": "24.x"
   }
 }
