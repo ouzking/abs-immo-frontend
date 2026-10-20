@@ -11,6 +11,19 @@
   `BreadcrumbList`. Uniquement des champs réels ; les photos (URL signées expirant) ne sont pas déclarées.
 - 404 et annonces retirées en `noindex`.
 
+## Aperçus de partage (WhatsApp, Facebook, LinkedIn, X…) — en place
+
+`api/seo.ts` (fonction Vercel) répond **uniquement aux robots** (réécriture conditionnée au User-Agent
+dans `vercel.json`) avec `index.html` enrichi des métadonnées de la page : titre, description, URL
+canonique, `og:*`, `twitter:*`, `lang`. Pour une annonce : titre, prix, statut, quartier, référence et
+photo de couverture (URL signée 7 jours). Les visiteurs humains reçoivent le site normal.
+
+Vérifié en production le 20/10/2026 avec les User-Agents WhatsApp et Facebook (pages fixes, anglais,
+annonce introuvable en `noindex`). L'aperçu d'une annonce réelle n'a pas encore pu être vérifié en ligne :
+aucune annonce n'est publiée en production. Test : partager un lien d'annonce dans WhatsApp, ou
+`curl -A "WhatsApp/2.23" https://abs-immo-service.vercel.app/biens/<slug>`. Pour forcer Facebook à
+relire un aperçu déjà en cache : https://developers.facebook.com/tools/debug/
+
 ## Limite de l'architecture actuelle (SPA)
 
 Le HTML initial est identique pour toutes les URL ; le contenu et les balises spécifiques sont produits
@@ -19,9 +32,7 @@ par JavaScript.
 - **Google** exécute le JavaScript et peut indexer les annonces, avec un délai de rendu. Ce n'est
   **pas vérifié** tant que le site n'est pas en ligne : contrôler avec l'outil d'inspection d'URL de
   Search Console.
-- **Aperçus de partage** (WhatsApp, Facebook, LinkedIn) : leurs robots n'exécutent pas JavaScript. Un lien
-  d'annonce partagé affiche donc le titre et l'image **par défaut du site**, pas ceux du bien. C'est la
-  principale limite pour une agence dont les annonces circulent beaucoup sur WhatsApp.
+- **Aperçus de partage** : résolus par la fonction ci-dessus (option A, adoptée).
 - Performance : le premier affichage attend le JavaScript (LCP mobile simulé ≈ 3,6 s).
 
 ## Option recommandée pour la suite (non adoptée sans validation)
