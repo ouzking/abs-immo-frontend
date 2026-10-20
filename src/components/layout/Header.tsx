@@ -35,7 +35,8 @@ export function Header() {
   return (
     <header
       className={cn(
-        'sticky top-0 z-40 border-b bg-white/95 backdrop-blur-md transition-[box-shadow,border-color] duration-300 supports-backdrop-filter:bg-white/85',
+        // Fond plein (pas de backdrop-filter) : le flou rendait translucides les menus qui débordent de l'en-tête.
+        'sticky top-0 z-40 border-b bg-white transition-[box-shadow,border-color] duration-300',
         scrolled ? 'border-mist-200 shadow-[0_8px_30px_-18px_rgb(11_29_46/0.35)]' : 'border-transparent',
       )}
     >
@@ -133,7 +134,7 @@ export function Header() {
             </ul>
           </nav>
           <div className="space-y-3 border-t border-mist-200 p-5">
-            <LanguageSwitcher onSelect={closeMenu} className="flex justify-center" />
+            <LanguageSwitcher onSelect={closeMenu} placement="up" className="flex justify-center" />
             <ButtonLink to="/contact" onClick={closeMenu} className="w-full" size="lg">
               {t.nav.contactCta}
             </ButtonLink>

@@ -1,4 +1,3 @@
-import { describe, expect, it } from 'vitest'
 import { DEFAULT_CRITERIA } from '@/features/search/searchParams'
 import { mockSupabase } from '@/test/supabaseMock'
 import { getFeaturedProperties, getPropertyBySlug, searchProperties, toSearchArgs } from './propertiesService'

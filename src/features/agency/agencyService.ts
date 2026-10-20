@@ -112,7 +112,7 @@ export function toAgencyInfo(row: AgencyRow | null): AgencyInfo {
     phone: row?.phone ?? OFFICIAL_CONTACT.phone,
     secondaryPhone: row?.secondary_phone ?? null,
     whatsapp: row?.whatsapp_phone ?? OFFICIAL_CONTACT.whatsapp,
-    email: row?.email ?? null,
+    email: row?.email ?? OFFICIAL_CONTACT.email,
     address: row?.address_line ?? null,
     openingHours: parseOpeningHours(row?.opening_hours),
     socialLinks: parseSocialLinks(row?.social_links),

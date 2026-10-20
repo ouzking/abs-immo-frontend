@@ -1,4 +1,3 @@
-import { describe, expect, it } from 'vitest'
 import { addDaysIso, buildInquiryMessage, inquirySchema, normalizePhone, todayIso, viewingSchema } from './schemas'
 
 const baseInquiry = {

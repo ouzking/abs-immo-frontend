@@ -1,6 +1,5 @@
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
 import { renderApp } from '@/test/render'
 import { mockSupabase } from '@/test/supabaseMock'
 import { localizePath, splitLocale } from './config'
@@ -82,7 +81,14 @@ describe('site multilingue', () => {
     emptyBackend()
     const { router } = renderApp('/acheter?ville=dakar')
     await screen.findByRole('heading', { level: 1, name: 'Acheter un bien' })
-    await userEvent.setup().click(screen.getAllByRole('link', { name: 'English' })[0]!)
+    const user = userEvent.setup()
+    // Un seul bouton : il affiche la langue courante et déroule la liste au clic.
+    const toggle = screen.getAllByRole('button', { name: /Langue : Français/ })[0]!
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByRole('link', { name: 'English' })).not.toBeInTheDocument()
+    await user.click(toggle)
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    await user.click(screen.getByRole('link', { name: 'English' }))
     await waitFor(() => expect(router.state.location.pathname).toBe('/en/acheter'))
     expect(router.state.location.search).toBe('?ville=dakar')
     expect(await screen.findByRole('heading', { level: 1, name: 'Buy a property' })).toBeInTheDocument()

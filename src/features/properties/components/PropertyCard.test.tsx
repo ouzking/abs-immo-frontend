@@ -1,5 +1,4 @@
 import { screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
 import { renderWithRouter } from '@/test/render'
 import type { PropertyCardView } from '../api/propertiesService'
 import { PropertyCard } from './PropertyCard'

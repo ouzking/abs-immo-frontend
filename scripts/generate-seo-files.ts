@@ -19,7 +19,8 @@ import { loadEnv } from 'vite'
 
 const mode = process.env.MODE ?? 'production'
 const env = { ...loadEnv(mode, process.cwd(), 'VITE_'), ...process.env }
-const siteUrl = env.VITE_SITE_URL?.trim().replace(/\/+$/, '')
+const vercelUrl = env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${env.VERCEL_PROJECT_PRODUCTION_URL}` : undefined
+const siteUrl = (env.VITE_SITE_URL || vercelUrl)?.trim().replace(/\/+$/, '')
 const supabaseUrl = env.VITE_SUPABASE_URL?.trim().replace(/\/+$/, '')
 const supabaseKey = (env.VITE_SUPABASE_PUBLISHABLE_KEY ?? env.VITE_SUPABASE_ANON_KEY)?.trim()
 const outDir = resolve(process.cwd(), 'dist')

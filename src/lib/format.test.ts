@@ -1,4 +1,3 @@
-import { describe, expect, it } from 'vitest'
 import { formatBudget, formatPhone, formatPrice, formatSurface, plural, telHref, whatsappHref } from './format'
 
 describe('format', () => {

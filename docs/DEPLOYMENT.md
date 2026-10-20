@@ -18,6 +18,26 @@ le CAPTCHA est actif.
 et `dist/robots.txt`. Si l'API est injoignable, le build réussit avec un sitemap limité aux pages fixes.
 **Planifier un rebuild quotidien** (ou à chaque publication) pour garder le sitemap à jour.
 
+## Vercel (projet `abs-immo-service`)
+
+Le dépôt est prêt : `vercel.json` (réécritures SPA, cache, en-têtes) et `.env.production` (URL Supabase et
+clé **publishable**, toutes deux publiques par conception) sont versionnés. Aucune variable n'est donc
+obligatoire dans Vercel.
+
+1. Vercel → projet **abs-immo-service** → *Settings → Git* → **Connect Git Repository** →
+   `ouzking/abs-immo-frontend`, branche de production `main`.
+2. *Settings → Build and Deployment* : Framework **Other** (ou Vite), Build Command `npm run build`,
+   Output Directory `dist`, Node.js **24.x** (comme la CI).
+3. Lancer un déploiement (*Deployments → Redeploy*) ou pousser sur `main` : chaque push déploie
+   automatiquement ; chaque PR obtient une URL de prévisualisation.
+4. L'adresse du site (canonical, Open Graph, sitemap) est déduite de `VERCEL_PROJECT_PRODUCTION_URL`.
+   Avec un nom de domaine définitif, définir `VITE_SITE_URL=https://www.abs-immo.sn` dans
+   *Settings → Environment Variables* (Production) puis redéployer.
+
+Vérifié le 20/10/2026 : le backend de production accepte les formulaires depuis
+`https://abs-immo-service.vercel.app` (pas de liste `ALLOWED_ORIGINS` restrictive). L'équipe backend
+devrait la définir avec les domaines réels du site.
+
 ## Hébergeurs
 
 | Hébergeur | Fichiers fournis | Réglages |

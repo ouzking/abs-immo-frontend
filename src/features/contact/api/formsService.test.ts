@@ -1,5 +1,4 @@
 import { FunctionsFetchError, FunctionsHttpError } from '@supabase/supabase-js'
-import { describe, expect, it } from 'vitest'
 import { mockSupabase } from '@/test/supabaseMock'
 import { currentUtm, mapFunctionError, submitInquiry } from './formsService'
 

@@ -138,7 +138,7 @@ Rien n'est inventé : tant qu'une information n'est pas fournie, elle n'est pas 
 | Coordonnées, horaires, réseaux sociaux, NINEA, RCCM, description | `agency_settings` (back-office) | à saisir en production |
 | Indicateurs « 50+ biens, 70+ clients, 15+ ans, 98 % » | [src/config/trustIndicators.ts](src/config/trustIndicators.ts) | **masqués** (`validated: false`) |
 | Directeur de publication, hébergeur, déclaration CDP | [src/config/legal.ts](src/config/legal.ts) | à compléter avant mise en ligne |
-| Numéro officiel +221 77 430 83 44 (téléphone et WhatsApp) | [src/config/officialContact.ts](src/config/officialContact.ts) | **intégré** ; utilisé si `agency_settings` ne fournit pas de numéro (ou est injoignable) |
+| Numéro officiel +221 77 430 83 44 (téléphone et WhatsApp) et e-mail elhadjisane1990@gmail.com | [src/config/officialContact.ts](src/config/officialContact.ts) | **intégré** ; utilisés si `agency_settings` ne fournit pas ces valeurs (ou est injoignable) |
 | Logo vectoriel | `public/assets/brand/` | à fournir |
 
 ## Documentation

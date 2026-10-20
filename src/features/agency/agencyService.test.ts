@@ -1,4 +1,3 @@
-import { describe, expect, it } from 'vitest'
 import { looksLikeSecretKey } from '@/config/env'
 import { parseOpeningHours, parseSocialLinks } from './agencyService'
 
@@ -45,7 +44,7 @@ describe('coordonnées officielles', () => {
     const fallback = toAgencyInfo(null)
     expect(fallback.phone).toBe('+221774308344')
     expect(fallback.whatsapp).toBe('+221774308344')
-    expect(fallback.email).toBeNull()
+    expect(fallback.email).toBe('elhadjisane1990@gmail.com')
     const fromBackoffice = toAgencyInfo({ phone: '+221338001122', whatsapp_phone: null } as never)
     expect(fromBackoffice.phone).toBe('+221338001122')
     expect(fromBackoffice.whatsapp).toBe('+221774308344')

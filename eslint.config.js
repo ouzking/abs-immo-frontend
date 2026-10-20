@@ -31,6 +31,11 @@ export default defineConfig([
   {
     // Fichier de configuration des routes (déclare des composants paresseux) : pas concerné par le Fast Refresh.
     files: ['src/app/router.tsx', 'src/**/*.test.{ts,tsx}', 'src/test/**'],
-    rules: { 'react-refresh/only-export-components': 'off' },
+    rules: {
+      'react-refresh/only-export-components': 'off',
+      // Vitest 5 charge parfois une seconde instance du module « vitest » importé explicitement
+      // (« Cannot read properties of undefined (reading 'config') ») : utiliser les globales.
+      'no-restricted-imports': ['error', { paths: [{ name: 'vitest', message: 'Utiliser les globales (globals: true).' }] }],
+    },
   },
 ])

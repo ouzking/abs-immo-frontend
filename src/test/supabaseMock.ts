@@ -1,4 +1,3 @@
-import { vi } from 'vitest'
 import { setSupabaseClientForTests } from '@/lib/supabase/client'
 
 /**
