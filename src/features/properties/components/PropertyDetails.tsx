@@ -114,7 +114,7 @@ export function AmenityList({ amenities }: { amenities: PropertyDetailView['amen
   const groups = new Map<string, string[]>()
   for (const a of amenities) {
     const key = categories[a.category] ?? t.labels.amenityCategories.other
-    groups.set(key, [...(groups.get(key) ?? []), fmt.amenity(a.code, a.label)])
+    groups.set(key, [...(groups.get(key) ?? []), fmt.amenity(a.code, a.label, a.label_en)])
   }
   return (
     <div className="grid gap-8 sm:grid-cols-2">

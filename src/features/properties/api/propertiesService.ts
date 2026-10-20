@@ -4,8 +4,10 @@ import { signPropertyImages } from '@/lib/supabase/storage'
 import { SORT_TO_API, type SearchCriteria } from '@/features/search/searchParams'
 import {
   PROPERTY_CARD_COLUMNS,
+  PROPERTY_CARD_COLUMNS_EN,
   type PropertyCard,
   type PropertyImage,
+  type PublicProperty,
   type PublicFilters,
   type PublicPropertyDetail,
   type SearchPropertiesParams,
@@ -16,7 +18,12 @@ import {
  * Contrat : abs-immo-backend/docs/INTEGRATION_CONTRACT.md § 2.
  */
 
-export interface PropertyCardView extends PropertyCard {
+/** Colonnes de carte, françaises ET anglaises (contrat 1.1.0) : une seule requête quelle que soit la langue. */
+const CARD_COLUMNS = `${PROPERTY_CARD_COLUMNS},${PROPERTY_CARD_COLUMNS_EN}`
+
+type CardEnglish = Partial<Pick<PublicProperty, 'title_en' | 'short_description_en' | 'property_type_label_en' | 'has_english'>>
+
+export interface PropertyCardView extends PropertyCard, CardEnglish {
   /** URL signée de la photo de couverture, ou null (repli visuel). */
   coverUrl: string | null
 }
@@ -39,7 +46,7 @@ export interface SearchResult {
 
 export const PAGE_SIZE = 12
 
-async function withCovers(cards: PropertyCard[]): Promise<PropertyCardView[]> {
+async function withCovers(cards: Array<PropertyCard & CardEnglish>): Promise<PropertyCardView[]> {
   if (cards.length === 0) return []
   const urls = await signPropertyImages(cards.map((c) => c.cover_image_path))
   return cards.map((c) => ({ ...c, coverUrl: c.cover_image_path ? (urls.get(c.cover_image_path) ?? null) : null }))
@@ -63,7 +70,7 @@ export async function searchProperties(criteria: SearchCriteria, pageSize = PAGE
   const from = (criteria.page - 1) * pageSize
   let query = getSupabase()
     .rpc('search_properties', toSearchArgs(criteria), { count: 'exact' })
-    .select(PROPERTY_CARD_COLUMNS)
+    .select(CARD_COLUMNS)
   // Filtres PostgREST additionnels autorisés par le contrat (§ 2.2).
   if (criteria.city) query = query.eq('city_slug', criteria.city)
   if (criteria.neighborhood) query = query.eq('neighborhood_slug', criteria.neighborhood)
@@ -76,7 +83,7 @@ export async function searchProperties(criteria: SearchCriteria, pageSize = PAGE
   }
   const total = count ?? 0
   return {
-    items: await withCovers((data ?? []) as unknown as PropertyCard[]),
+    items: await withCovers((data ?? []) as unknown as Array<PropertyCard & CardEnglish>),
     total,
     page: criteria.page,
     pageSize,
@@ -92,19 +99,19 @@ export async function getFeaturedProperties(limit = 6): Promise<PropertyCardView
   const sb = getSupabase()
   const featured = await sb
     .rpc('search_properties', { p_featured_only: true, p_sort: 'featured' })
-    .select(PROPERTY_CARD_COLUMNS)
+    .select(CARD_COLUMNS)
     .range(0, limit - 1)
   if (featured.error) throw toAppError(featured.error)
-  const cards = (featured.data ?? []) as unknown as PropertyCard[]
+  const cards = (featured.data ?? []) as unknown as Array<PropertyCard & CardEnglish>
 
   if (cards.length < limit) {
     const latest = await sb
       .rpc('search_properties', { p_sort: 'newest', p_commercial_statuses: ['available', 'reserved'] })
-      .select(PROPERTY_CARD_COLUMNS)
+      .select(CARD_COLUMNS)
       .range(0, limit + cards.length - 1)
     if (latest.error) throw toAppError(latest.error)
     const ids = new Set(cards.map((c) => c.id))
-    for (const c of (latest.data ?? []) as unknown as PropertyCard[]) {
+    for (const c of (latest.data ?? []) as unknown as Array<PropertyCard & CardEnglish>) {
       if (cards.length >= limit) break
       if (!ids.has(c.id)) cards.push(c)
     }
@@ -137,9 +144,9 @@ export async function getPropertyBySlug(slug: string): Promise<PropertyDetailVie
 export async function getSimilarProperties(propertyId: string, limit = 3): Promise<PropertyCardView[]> {
   const { data, error } = await getSupabase()
     .rpc('get_similar_properties', { p_property_id: propertyId, p_limit: limit })
-    .select(PROPERTY_CARD_COLUMNS)
+    .select(CARD_COLUMNS)
   if (error) throw toAppError(error)
-  return withCovers((data ?? []) as unknown as PropertyCard[])
+  return withCovers((data ?? []) as unknown as Array<PropertyCard & CardEnglish>)
 }
 
 const EMPTY_FILTERS: PublicFilters = {

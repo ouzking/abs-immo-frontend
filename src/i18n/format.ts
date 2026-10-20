@@ -1,4 +1,4 @@
-import type { RentPeriod, SurfaceUnit } from '@/types'
+import { localized, type RentPeriod, type SurfaceUnit } from '@/types'
 import { LOCALE_META, type Locale } from './config'
 import type { Messages } from './messages/fr'
 
@@ -33,12 +33,21 @@ export function createFormatters(locale: Locale, t: Messages) {
       const d = new Date(iso)
       return Number.isNaN(d.getTime()) ? null : date.format(d)
     },
-    /** Libellé d'un type de bien : traduction si disponible, sinon libellé du backend. */
-    propertyType(code: string | null | undefined, backendLabel: string | null | undefined): string {
-      return (code && t.labels.propertyTypes[code]) || backendLabel || ''
+    /**
+     * Libellé d'un type de bien : en anglais, libellé anglais du backend (contrat 1.1.0), puis
+     * dictionnaire du site ; sinon libellé français du backend.
+     */
+    propertyType(code: string | null | undefined, labelFr: string | null | undefined, labelEn?: string | null): string {
+      if (locale === 'en') return labelEn || (code && t.labels.propertyTypes[code]) || labelFr || ''
+      return (code && t.labels.propertyTypes[code]) || labelFr || ''
     },
-    amenity(code: string, backendLabel: string): string {
-      return t.labels.amenities[code] || backendLabel
+    amenity(code: string, labelFr: string, labelEn?: string | null): string {
+      if (locale === 'en') return labelEn || t.labels.amenities[code] || labelFr
+      return t.labels.amenities[code] || labelFr
+    },
+    /** Contenu saisi par l'agence : anglais si traduit, sinon français (wolof = français). */
+    text(fr: string | null | undefined, en: string | null | undefined): string | null {
+      return localized(fr ?? null, en, locale)
     },
   }
 }

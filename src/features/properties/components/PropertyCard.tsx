@@ -26,6 +26,7 @@ export function PropertyCard({
   const { t, fmt } = useI18n()
   const Heading = headingLevel
   const location = propertyLocation(p)
+  const title = fmt.text(p.title, p.title_en) ?? ''
   const surface = fmt.surface(p.surface_area, p.surface_unit)
   const unavailable = isNoLongerAvailable(p.commercial_status)
   const facts = [
@@ -45,7 +46,7 @@ export function PropertyCard({
       <div className="relative">
         <PropertyImage
           src={p.coverUrl}
-          alt={p.cover_image_alt ?? p.title ?? ''}
+          alt={p.cover_image_alt ?? title}
           priority={priority}
           sizes="(min-width: 1280px) 400px, (min-width: 768px) 50vw, 100vw"
           className="aspect-4/3"
@@ -64,12 +65,12 @@ export function PropertyCard({
 
       <div className="flex flex-1 flex-col p-5 sm:p-6">
         <div className="flex items-center justify-between gap-3 text-xs font-semibold tracking-wide text-mist-500 uppercase">
-          <span>{fmt.propertyType(p.property_type, p.property_type_label)}</span>
+          <span>{fmt.propertyType(p.property_type, p.property_type_label, p.property_type_label_en)}</span>
           {p.reference && <span className="font-mono text-[0.6875rem] tracking-normal normal-case">{p.reference}</span>}
         </div>
         <Heading className="font-display mt-2 line-clamp-2 text-xl leading-snug font-medium text-navy-900">
           <Link to={`/biens/${p.slug}`} className="outline-none after:absolute after:inset-0 after:content-['']">
-            {p.title}
+            {title}
           </Link>
         </Heading>
         {location && (

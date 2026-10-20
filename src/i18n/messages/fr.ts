@@ -268,6 +268,7 @@ export const fr = {
     },
     activeFilters: 'Filtres actifs',
     removeFilter: '(retirer ce filtre)',
+    chipQuery: (q: string) => `« ${q} »`,
     chipFrom: (v: string) => `Dès ${v}`,
     chipTo: (v: string) => `Jusqu’à ${v}`,
     chipBedrooms: (n: number) => `${n}+ chambres`,
@@ -342,6 +343,7 @@ export const fr = {
     amenities: 'Équipements',
     location: 'Localisation',
     country: 'Sénégal',
+    frenchOnly: '',
     disclaimer:
       'Informations communiquées à titre indicatif par l’agence et susceptibles d’évoluer. Elles ne constituent pas un document contractuel.',
     contactAside: 'Contacter l’agence pour ce bien',

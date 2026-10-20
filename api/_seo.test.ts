@@ -35,6 +35,19 @@ describe('aperçus de partage (fonction Vercel /api/seo)', () => {
     expect(meta.image).toBe(`${ORIGIN}/og-default.jpg`)
   })
 
+  it('utilise la traduction anglaise de l’annonce quand elle existe (contrat 1.1.0)', () => {
+    const meta = buildMeta(
+      ORIGIN,
+      '/en/biens/x',
+      { ...listing, title_en: 'Contemporary villa with pool in Almadies', short_description_en: 'Architect-designed villa.' },
+      null,
+    )
+    expect(meta.title).toBe('Contemporary villa with pool in Almadies — Almadies, Dakar | ABS IMMO & SERVICES')
+    expect(meta.description).toBe('For sale · 450,000,000 FCFA · Almadies, Dakar · ABS-V-2600001 — Architect-designed villa.')
+    // Le français reste en français.
+    expect(buildMeta(ORIGIN, '/biens/x', { ...listing, title_en: 'X' }, null).title).toContain('Villa contemporaine')
+  })
+
   it('n’indexe pas une annonce introuvable ni les pages wolof', () => {
     expect(buildMeta(ORIGIN, '/biens/inconnu', null, null).noindex).toBe(true)
     expect(buildMeta(ORIGIN, '/wo/louer', null, null).noindex).toBe(true)

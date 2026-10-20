@@ -106,6 +106,11 @@ export interface ListingSummary {
   short_description: string | null
   seo_title: string | null
   seo_description: string | null
+  /** Contrat 1.1.0 : traductions anglaises facultatives (repli sur le français). */
+  title_en?: string | null
+  short_description_en?: string | null
+  seo_title_en?: string | null
+  seo_description_en?: string | null
   transaction_type: string | null
   commercial_status: string | null
   price_amount: number | null
@@ -144,15 +149,23 @@ export function buildMeta(
       listing.commercial_status === 'sold' ? w.sold : listing.commercial_status === 'rented' ? w.rented : null
     const kind = listing.transaction_type === 'rent' ? w.rent : w.sale
     const price = formatPrice(listing.price_amount, lang, listing.transaction_type === 'rent' ? listing.rent_period : null)
-    const title = (lang === 'fr' && listing.seo_title) || `${listing.title}${location ? ` — ${location}` : ''}`
+    // Anglais : champs *_en s'ils existent ; sinon titre français et résumé (prix, statut, lieu) en anglais.
+    const en = lang === 'en'
+    const name = (en && listing.title_en) || listing.title
+    const seoTitle = en ? listing.seo_title_en : locale === 'fr' ? listing.seo_title : null
+    const title = seoTitle || `${name}${location ? ` — ${location}` : ''}`
     const summary = [status ?? kind, price, location ? `${location}` : null, listing.reference].filter(Boolean).join(' · ')
-    const text = lang === 'fr' ? (listing.seo_description ?? listing.short_description) : null
+    const text = en
+      ? (listing.seo_description_en ?? listing.short_description_en)
+      : locale === 'fr'
+        ? (listing.seo_description ?? listing.short_description)
+        : null
     return {
       ...base,
       title: `${title} | ${SITE_NAME}`,
       description: text ? `${summary} — ${text}` : summary,
       image: coverUrl ?? base.image,
-      imageAlt: listing.title,
+      imageAlt: name ?? SITE_NAME,
       type: 'article',
     }
   }

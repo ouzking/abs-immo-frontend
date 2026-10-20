@@ -28,7 +28,8 @@ export type {
   ApiErrorCode,
   UtmParams,
 } from './backend/index.ts'
-export { PROPERTY_CARD_COLUMNS, STORAGE_BUCKETS, CONTRACT_VERSION } from './backend/index.ts'
+export { PROPERTY_CARD_COLUMNS, PROPERTY_CARD_COLUMNS_EN, STORAGE_BUCKETS, CONTRACT_VERSION, localized } from './backend/index.ts'
+export type { SiteLocale } from './backend/index.ts'
 
 export type PropertyImage = PublicPropertyDetail['images'][number]
 export type PropertyAmenity = PublicPropertyDetail['amenities'][number]

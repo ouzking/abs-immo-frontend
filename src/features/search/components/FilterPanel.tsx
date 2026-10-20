@@ -153,7 +153,7 @@ export function FilterPanel({
             {types.map((pt) => (
               <li key={pt.code} className="flex items-center justify-between gap-2">
                 <CheckboxField
-                  label={fmt.propertyType(pt.code, pt.label)}
+                  label={fmt.propertyType(pt.code, pt.label, pt.label_en)}
                   checked={criteria.types.includes(pt.code)}
                   onChange={() => toggleType(pt.code)}
                   disabled={pt.count === 0 && !criteria.types.includes(pt.code)}

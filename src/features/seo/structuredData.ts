@@ -59,15 +59,19 @@ const AVAILABILITY: Record<string, string> = {
  * Annonce : RealEstateListing + offre. Les photos (URL signées, temporaires)
  * ne sont volontairement pas déclarées : une URL expirée nuirait à l'indexation.
  */
-export function propertyJsonLd(p: PropertyDetailView, localize: (path: string) => string = (x) => x): JsonLd {
+export function propertyJsonLd(
+  p: PropertyDetailView,
+  localize: (path: string) => string = (x) => x,
+  texts: { name?: string | null; description?: string | null } = {},
+): JsonLd {
   const path = localize(`/biens/${p.slug}`)
   return compact({
     '@context': 'https://schema.org',
     '@type': 'RealEstateListing',
     '@id': absoluteUrl(path),
     url: absoluteUrl(path),
-    name: p.title,
-    description: p.short_description ?? p.seo_description ?? undefined,
+    name: texts.name ?? p.title,
+    description: (texts.description ?? p.short_description ?? p.seo_description) || undefined,
     datePosted: p.published_at ?? undefined,
     identifier: p.reference ?? undefined,
     offers:

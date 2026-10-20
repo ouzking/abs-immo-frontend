@@ -147,21 +147,27 @@ export default function PropertyPage() {
   const location = [p.neighborhood_name, p.city_name].filter(Boolean).join(', ')
   const unavailable = isNoLongerAvailable(p.commercial_status)
   const contact = propertyContact(p, agency, t)
-  const typeLabel = fmt.propertyType(p.property_type, p.property_type_label)
-  const title = p.title ?? t.property.fallbackTitle
+  const typeLabel = fmt.propertyType(p.property_type, p.property_type_label, p.property_type_label_en)
+  // Contrat 1.1.0 : champs anglais facultatifs, repli sur le français (le wolof utilise le français).
+  const title = fmt.text(p.title, p.title_en) ?? t.property.fallbackTitle
+  const shortDescription = fmt.text(p.short_description, p.short_description_en)
+  const longDescription = fmt.text(p.description, p.description_en)
+  const seoTitle = fmt.text(p.seo_title, p.seo_title_en)
+  const seoDescription = fmt.text(p.seo_description, p.seo_description_en)
+  // Contenu réellement rédigé dans la langue affichée ? (sinon les textes saisis restent en français)
+  const contentInLocale = locale !== 'en' || !!p.has_english
   const autoDescription = t.property.autoDescription(typeLabel, t.labels.transaction[transaction], location, price)
-  // Les textes des annonces sont rédigés en français : description générée dans les autres langues.
-  const description = locale === 'fr' ? (p.seo_description ?? p.short_description ?? autoDescription) : autoDescription
+  const description = contentInLocale && locale !== 'wo' ? (seoDescription ?? shortDescription ?? autoDescription) : autoDescription
 
   return (
     <>
       <Seo
-        title={(locale === 'fr' && p.seo_title) || `${title}${location ? ` — ${location}` : ''}`}
+        title={(contentInLocale && locale !== 'wo' && seoTitle) || `${title}${location ? ` — ${location}` : ''}`}
         description={description}
         canonicalPath={`/biens/${p.slug}`}
         type="article"
         jsonLd={[
-          propertyJsonLd(p, path),
+          propertyJsonLd(p, path, { name: title, description: shortDescription }),
           breadcrumbJsonLd([
             { name: t.common.home, path: path('/') },
             { name: listName, path: path(listPath) },
@@ -184,7 +190,7 @@ export default function PropertyPage() {
               <CommercialStatusBadge status={p.commercial_status} showAvailable />
               {typeLabel && <span className="text-sm font-semibold text-mist-600">{typeLabel}</span>}
             </div>
-            <h1 className="font-display mt-4 text-3xl leading-[1.12] font-medium text-navy-900 sm:text-4xl lg:text-5xl">{p.title}</h1>
+            <h1 className="font-display mt-4 text-3xl leading-[1.12] font-medium text-navy-900 sm:text-4xl lg:text-5xl">{title}</h1>
             {location && (
               <p className="mt-3 flex items-center gap-2 text-mist-600">
                 <MapPin aria-hidden="true" className="size-5 shrink-0 text-brand-red-600" />
@@ -213,12 +219,13 @@ export default function PropertyPage() {
             <Gallery images={p.images} title={title} />
             <KeyFacts property={p} />
 
-            {(p.short_description || p.description) && (
+            {(shortDescription || longDescription) && (
               <DetailSection title={t.property.description} id="desc-title">
-                {p.short_description && !p.description?.startsWith(p.short_description) && (
-                  <p className="mb-5 text-lg leading-8 font-medium text-navy-900">{p.short_description}</p>
+                {!contentInLocale && <p className="mb-4 text-sm text-mist-500">{t.property.frenchOnly}</p>}
+                {shortDescription && !longDescription?.startsWith(shortDescription) && (
+                  <p className="mb-5 text-lg leading-8 font-medium text-navy-900">{shortDescription}</p>
                 )}
-                {p.description && <Paragraphs text={p.description} />}
+                {longDescription && <Paragraphs text={longDescription} />}
               </DetailSection>
             )}
 

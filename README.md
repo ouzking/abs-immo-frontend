@@ -4,7 +4,7 @@ Site public officiel d'**ABS IMMO & SERVICES**, agence immobilière au Sénégal
 catalogue d'annonces filtrable, fiches détaillées, demandes de renseignements et de visite.
 
 Le site lit et écrit **exclusivement** via le projet Supabase commun, selon le contrat publié par
-[`abs-immo-backend`](../abs_immo_backend/docs/INTEGRATION_CONTRACT.md) (version **1.0.0**). Il ne crée
+[`abs-immo-backend`](../abs_immo_backend/docs/INTEGRATION_CONTRACT.md) (version **1.1.0**, annonces bilingues). Il ne crée
 aucune table, aucun bucket, aucune fonction, et n'utilise aucune clé secrète.
 
 | | |

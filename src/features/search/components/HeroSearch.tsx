@@ -94,7 +94,7 @@ export function HeroSearch() {
           <option value="">{loading ? t.common.loading : s.allTypes}</option>
           {types.map((pt) => (
             <option key={pt.code} value={pt.code}>
-              {fmt.propertyType(pt.code, pt.label)}
+              {fmt.propertyType(pt.code, pt.label, pt.label_en)}
             </option>
           ))}
         </SelectField>

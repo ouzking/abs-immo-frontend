@@ -36,9 +36,10 @@ const SORT_OPTIONS: SortOption[] = ['recent', 'prix-asc', 'prix-desc', 'surface'
 
 function activeChips(c: SearchCriteria, filters: PublicFilters | undefined, { t, fmt }: I18nValue): Chip[] {
   const chips: Chip[] = []
-  if (c.q) chips.push({ key: 'q', label: `« ${c.q} »`, patch: { q: '' } })
+  if (c.q) chips.push({ key: 'q', label: t.catalog.chipQuery(c.q), patch: { q: '' } })
   for (const code of c.types) {
-    const label = fmt.propertyType(code, filters?.property_types.find((pt) => pt.code === code)?.label ?? code)
+    const type = filters?.property_types.find((pt) => pt.code === code)
+    const label = fmt.propertyType(code, type?.label ?? code, type?.label_en)
     chips.push({ key: `type-${code}`, label, patch: { types: c.types.filter((x) => x !== code) } })
   }
   if (c.city) {

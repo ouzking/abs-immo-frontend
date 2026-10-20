@@ -59,4 +59,23 @@ describe('PropertyCard', () => {
     renderWithRouter(<PropertyCard property={{ ...base, price_amount: null, price_on_request: true }} />)
     expect(screen.getByText('Prix sur demande')).toBeInTheDocument()
   })
+
+  it('affiche la traduction anglaise de l’annonce (contrat 1.1.0)', () => {
+    renderWithRouter(
+      <PropertyCard property={{ ...base, title_en: 'Titled plot in Saly', property_type_label_en: 'Plot', has_english: true }} />,
+      '/',
+      'en',
+    )
+    expect(screen.getByRole('link', { name: 'Titled plot in Saly' })).toHaveAttribute('href', '/en/biens/terrain-saly')
+    expect(screen.getByText('Plot')).toBeInTheDocument()
+    expect(screen.getByText('35,000,000 FCFA')).toBeInTheDocument()
+    expect(screen.getByText('For sale')).toBeInTheDocument()
+  })
+
+  it('repli sur le français quand l’annonce n’est pas traduite', () => {
+    renderWithRouter(<PropertyCard property={{ ...base, title_en: null, has_english: false }} />, '/', 'en')
+    expect(screen.getByRole('link', { name: 'Terrain titré à Saly' })).toBeInTheDocument()
+    // Type traduit par le dictionnaire du site à défaut de libellé anglais du backend.
+    expect(screen.getByText('Land')).toBeInTheDocument()
+  })
 })

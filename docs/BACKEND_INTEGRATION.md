@@ -1,7 +1,7 @@
 # Intégration avec abs-immo-backend
 
-Référence : `abs-immo-backend/docs/INTEGRATION_CONTRACT.md`, contrat **1.0.0**
-(types copiés dans `src/types/backend/`, commit backend `8326f29`).
+Référence : `abs-immo-backend/docs/INTEGRATION_CONTRACT.md`, contrat **1.1.0**
+(types copiés dans `src/types/backend/` depuis le tag `v1.1.0` : `npm run types:sync -- v1.1.0`).
 
 ## Principes
 
@@ -81,10 +81,27 @@ une liste vide cohérente.
 
 **Non vérifié** : le projet distant `sasssoloprjakfysajvt` (aucune clé fournie au frontend).
 
+## Contrat 1.1.0 : annonces bilingues (intégré le 20/10/2026)
+
+- Les cartes demandent `PROPERTY_CARD_COLUMNS` + `PROPERTY_CARD_COLUMNS_EN` (une seule requête, quelle que
+  soit la langue) ; la fiche utilise `title_en`, `short_description_en`, `description_en`,
+  `seo_title_en`, `seo_description_en`, `property_type_label_en` ; équipements et filtres `label_en`.
+- Repli sur le français via `localized()` (exposé par `fmt.text()`), conformément au contrat ; le wolof
+  utilise le contenu français. En anglais, une annonce non traduite (`has_english = false`) l'indique.
+- La recherche texte fonctionne dans les deux langues avec le même `p_query` (vérifié : « warehouse »
+  trouve les entrepôts saisis en français).
+- La fonction d'aperçus `api/seo.ts` utilise aussi les champs anglais.
+
+## Production (vérifié le 20/10/2026)
+
+- Formulaires : seule l'origine `https://abs-immo-service.vercel.app` est acceptée (une autre origine
+  reçoit `403 ORIGIN_NOT_ALLOWED`). **Envoyer le domaine définitif à l'équipe backend** dès qu'il existe.
+- `agency_settings` : téléphone, WhatsApp et e-mail renseignés.
+
 ## Faire évoluer le contrat
 
 1. Le backend publie une nouvelle version (tag `vX.Y.Z`).
-2. `npm run types:sync` puis `npm run check`.
+2. `npm run types:sync -- vX.Y.Z` puis `npm run check`.
 3. Mettre à jour `CONTRACT_VERSION_EXPECTED` (`src/config/env.ts`) et `src/types/backend/README.md`.
 
 Les valeurs d'énumération inconnues (nouveau statut, nouvelle catégorie) sont tolérées : elles ne sont
